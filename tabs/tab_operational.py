@@ -23,8 +23,8 @@ def _compute_metrics(df: pd.DataFrame) -> dict:
     }
 
 
-def _channel_detail_table(df_sub: pd.DataFrame, plan_type_label: str):
-    """渲染单个计划类型的渠道明细表"""
+def _channel_detail_table(df_sub: pd.DataFrame, plan_type_label: str) -> str:
+    """渲染单个计划类型的渠道明细表，返回 HTML"""
     rows = []
     for ch in CHANNELS:
         ch_df = df_sub[df_sub["渠道"] == ch]
@@ -44,7 +44,7 @@ def _channel_detail_table(df_sub: pd.DataFrame, plan_type_label: str):
 
     if not rows:
         st.info(f"没有 {plan_type_label} 的渠道数据")
-        return
+        return ""
 
     TH = "background:#a8001a;color:#fff;padding:9px 11px;font-weight:700;font-size:11.5px;"
     TD = "padding:8px 11px;border-bottom:1px solid #f0e8d6;"
@@ -66,7 +66,7 @@ def _channel_detail_table(df_sub: pd.DataFrame, plan_type_label: str):
             f"</tr>"
         )
 
-    st.markdown(
+    table_html = (
         f'<div style="font-size:13px;font-weight:600;color:#2b2620;margin:12px 0 8px;">{plan_type_label} 分渠道</div>'
         f'<table style="width:100%;border-collapse:collapse;font-size:13px;background:#fffdf8;border-radius:9px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);">'
         f'<thead><tr>'
@@ -80,8 +80,11 @@ def _channel_detail_table(df_sub: pd.DataFrame, plan_type_label: str):
         f'<th style="{TH}text-align:right;">订单Sales</th>'
         f'</tr></thead>'
         f'<tbody>{rows_html}</tbody>'
-        f'</table>',
-        unsafe_allow_html=True,
+        f'</table>'
+    )
+
+    st.markdown(table_html, unsafe_allow_html=True)
+    return table_html
     )
 
 
@@ -230,11 +233,12 @@ def render(df: pd.DataFrame, target: int):
     df_aarr = df_op[df_op["计划类型"] == "AARRPlan"]
     df_normal = df_op[df_op["计划类型"] == "常规Plan"]
 
+    detail_html = ""
     if len(df_aarr) > 0:
-        _channel_detail_table(df_aarr, "AARR")
+        detail_html += _channel_detail_table(df_aarr, "AARR")
 
     if len(df_normal) > 0:
-        _channel_detail_table(df_normal, "常规")
+        detail_html += _channel_detail_table(df_normal, "常规")
 
     # ─── 返回数据供导出（用 JSON 序列化避免 deepcopy 问题）─────
     import json
@@ -248,4 +252,4 @@ def render(df: pd.DataFrame, target: int):
         "normal_pct": round(m_normal["点击人次"] / m_total["点击人次"] * 100, 1) if m_total["点击人次"] > 0 else 0,
     }
     figs = [fig_json, fig2_json]
-    return figs, kpis
+    return figs, kpis, detail_html

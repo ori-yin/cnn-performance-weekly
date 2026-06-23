@@ -191,7 +191,7 @@ def main():
 
     st.markdown('<hr class="divider">', unsafe_allow_html=True)
     st.markdown('<div id="sec-operational"></div>', unsafe_allow_html=True)
-    op_figs, op_kpis = render_operational(df, target_dau)
+    op_figs, op_kpis, op_detail_html = render_operational(df, target_dau)
 
     st.markdown('<hr class="divider">', unsafe_allow_html=True)
     st.markdown('<div id="sec-bu"></div>', unsafe_allow_html=True)
@@ -218,6 +218,7 @@ def main():
             "operational": op_kpis,
         }
         tables = {
+            "operational": op_detail_html,
             "bu": bu_table_html,
             "plan": plan_html,
         }
