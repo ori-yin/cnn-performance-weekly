@@ -196,6 +196,11 @@ def _get_css() -> str:
     min-height: 300px;
   }
 
+  /* ─── 锚点跳转偏移（补偿固定 header 高度）─── */
+  [id^="sec-"] {
+    scroll-margin-top: 110px;
+  }
+
   /* ─── 分隔线 ─── */
   .divider {
     border: none;
