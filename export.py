@@ -348,11 +348,8 @@ def _fig_to_html(fig_json: str) -> str:
     if fig.layout.height is None:
         fig.update_layout(height=300)
 
-    # 生成 HTML
-    html = fig.to_html(include_plotlyjs=False, full_html=False)
-
-    # 包裹在有明确尺寸的容器中
-    return f'<div style="width:100%;min-height:{fig.layout.height or 300}px;">{html}</div>'
+    # 生成 HTML（包含 plotlyjs 以独立运行）
+    return fig.to_html(include_plotlyjs='cdn', full_html=False)
 
 
 def _render_section(num: int, title: str, content: str) -> str:
