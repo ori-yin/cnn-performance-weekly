@@ -190,6 +190,12 @@ def _get_css() -> str:
     letter-spacing: 0.02em;
   }
 
+  /* ─── Plotly 图表 ─── */
+  .plotly-graph-div {
+    width: 100% !important;
+    min-height: 300px;
+  }
+
   /* ─── 分隔线 ─── */
   .divider {
     border: none;
@@ -296,14 +302,22 @@ def _render_nav() -> str:
 """
 
 
+def _fmt_number(val, unit=""):
+    """格式化数字：大数用 K/M，百分比保留 1 位（和 Streamlit 一致）"""
+    if unit == "%":
+        return f"{val:.1f}%"
+    if abs(val) >= 1_000_000:
+        return f"{val / 1_000_000:.1f}M"
+    elif abs(val) >= 1_000:
+        return f"{val / 1_000:.1f}K"
+    return f"{val:,.0f}"
+
+
 def _render_kpi_card(label: str, value, sub: str = "", status: str = "", unit: str = "") -> str:
     """渲染 KPI 卡片"""
     status_cls = f" {status}" if status else ""
     if isinstance(value, (int, float)):
-        if value >= 1000:
-            value_str = f"{value:,.0f}"
-        else:
-            value_str = f"{value:.1f}" if isinstance(value, float) else str(value)
+        value_str = _fmt_number(value, unit=unit)
     else:
         value_str = str(value)
 
@@ -311,7 +325,7 @@ def _render_kpi_card(label: str, value, sub: str = "", status: str = "", unit: s
     return f"""
 <div class="kpi-card{status_cls}">
   <div class="kpi-label">{label}</div>
-  <div class="kpi-value">{value_str}{unit}</div>
+  <div class="kpi-value">{value_str}</div>
   {sub_html}
 </div>
 """
