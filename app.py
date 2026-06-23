@@ -66,8 +66,8 @@ def render_fixed_header_js():
         if (main) main.style.paddingTop = '100px';
 
         // 侧边栏固定宽度 280px
-        topbar.style.right = '280px';
-        navBar.style.right = '280px';
+        topbar.style.left = '280px';
+        navBar.style.left = '280px';
       }
 
       setupFixedHeader();
