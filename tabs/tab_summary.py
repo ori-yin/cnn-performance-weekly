@@ -11,7 +11,7 @@ from components import kpi_card, kpi_row, section_header
 
 
 def render(df: pd.DataFrame, target: int):
-    """渲染 Executive Summary 层"""
+    """渲染 Executive Summary 层，返回 (figs, kpis) 供导出用"""
 
     st.markdown(section_header("Executive Summary", ""), unsafe_allow_html=True)
 
@@ -178,3 +178,16 @@ def render(df: pd.DataFrame, target: int):
     )
 
     st.plotly_chart(fig2, use_container_width=True)
+
+    # ─── 返回数据供导出 ──────────────────────────────────
+    kpis = {
+        "avg_dau": round(avg_dau),
+        "achievement_rate": round(achievement_rate, 1),
+        "completion_str": completion_str,
+        "days_count": days_count,
+        "total_reach": total_reach,
+        "total_sales": total_sales,
+        "status": status_actual,
+    }
+    figs = [fig, fig2]
+    return figs, kpis

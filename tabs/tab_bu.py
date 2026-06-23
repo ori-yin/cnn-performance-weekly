@@ -122,3 +122,37 @@ def render(df: pd.DataFrame):
     )
 
     st.plotly_chart(fig, use_container_width=True)
+
+    # ─── 返回数据供导出（两个指标的图都生成）─────────────────
+    fig_reach = go.Figure()
+    fig_reach.add_trace(go.Bar(
+        x=top_n["BU"], y=top_n["触达成功"],
+        marker_color=MCD_RED, name="触达成功",
+        text=top_n["触达成功"].apply(lambda x: f"{x:,}"),
+        textposition="outside", textfont=dict(size=10),
+    ))
+    fig_reach.update_layout(
+        height=300, margin=dict(l=40, r=20, t=30, b=60),
+        plot_bgcolor="#f4efe6", paper_bgcolor="#f4efe6",
+        xaxis=dict(title="", gridcolor="#E8E8E8", tickangle=-30),
+        yaxis=dict(title="触达成功", gridcolor="#E8E8E8", tickformat=","),
+        showlegend=False, font=dict(family="'PingFang SC', 'Microsoft YaHei', sans-serif"),
+    )
+
+    fig_click = go.Figure()
+    fig_click.add_trace(go.Bar(
+        x=top_n["BU"], y=top_n["点击人次"],
+        marker_color=MCD_GOLD, name="点击人次",
+        text=top_n["点击人次"].apply(lambda x: f"{x:,}"),
+        textposition="outside", textfont=dict(size=10),
+    ))
+    fig_click.update_layout(
+        height=300, margin=dict(l=40, r=20, t=30, b=60),
+        plot_bgcolor="#f4efe6", paper_bgcolor="#f4efe6",
+        xaxis=dict(title="", gridcolor="#E8E8E8", tickangle=-30),
+        yaxis=dict(title="点击人次", gridcolor="#E8E8E8", tickformat=","),
+        showlegend=False, font=dict(family="'PingFang SC', 'Microsoft YaHei', sans-serif"),
+    )
+
+    figs = [fig_reach, fig_click]
+    return figs

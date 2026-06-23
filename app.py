@@ -187,19 +187,47 @@ def main():
 
     # ─── 主体内容（单页滚动，4个 section）─────────────────────
     st.markdown('<div id="sec-summary"></div>', unsafe_allow_html=True)
-    render_summary(df, target_dau)
+    summary_figs, summary_kpis = render_summary(df, target_dau)
 
     st.markdown('<hr class="divider">', unsafe_allow_html=True)
     st.markdown('<div id="sec-operational"></div>', unsafe_allow_html=True)
-    render_operational(df, target_dau)
+    op_figs, op_kpis = render_operational(df, target_dau)
 
     st.markdown('<hr class="divider">', unsafe_allow_html=True)
     st.markdown('<div id="sec-bu"></div>', unsafe_allow_html=True)
-    render_bu(df)
+    bu_figs = render_bu(df)
 
     st.markdown('<hr class="divider">', unsafe_allow_html=True)
     st.markdown('<div id="sec-plan"></div>', unsafe_allow_html=True)
     render_plan(df)
+
+    # ─── 导出 HTML 按钮 ──────────────────────────────────────
+    from export import generate_html
+
+    with st.sidebar:
+        st.markdown("---")
+        st.markdown("##### 导出分享")
+
+        figs = {
+            "summary": summary_figs,
+            "operational": op_figs,
+            "bu": bu_figs,
+        }
+        kpis = {
+            "summary": summary_kpis,
+            "operational": op_kpis,
+        }
+        tables = {}  # Plan 的表格在 export.py 中单独处理
+
+        html_content = generate_html(df, target_dau, figs, tables, kpis)
+        today_str = date.today().strftime("%Y%m%d")
+        st.download_button(
+            label="下载 HTML 看板",
+            data=html_content,
+            file_name=f"performance_review_{today_str}.html",
+            mime="text/html",
+            use_container_width=True,
+        )
 
 
 if __name__ == "__main__":

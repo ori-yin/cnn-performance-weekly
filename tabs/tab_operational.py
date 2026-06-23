@@ -235,3 +235,13 @@ def render(df: pd.DataFrame, target: int):
 
     if len(df_normal) > 0:
         _channel_detail_table(df_normal, "常规")
+
+    # ─── 返回数据供导出 ──────────────────────────────────
+    kpis = {
+        "total_reach": int(m_total["触达成功"]),
+        "total_clicks": int(m_total["点击人次"]),
+        "aarr_pct": round(m_aarr["点击人次"] / m_total["点击人次"] * 100, 1) if m_total["点击人次"] > 0 else 0,
+        "normal_pct": round(m_normal["点击人次"] / m_total["点击人次"] * 100, 1) if m_total["点击人次"] > 0 else 0,
+    }
+    figs = [fig, fig2]
+    return figs, kpis
