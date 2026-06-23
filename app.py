@@ -17,10 +17,17 @@ from tabs.tab_plan import render as render_plan
 
 def render_topbar(today_str: str):
     """渲染顶部栏"""
+    import base64
+    from pathlib import Path
+
+    # 读取 logo 并转 base64
+    logo_path = Path(__file__).parent / "mcdonalds.png"
+    logo_b64 = base64.b64encode(logo_path.read_bytes()).decode()
+
     st.markdown(f"""
     <div class="topbar">
       <div class="topbar-left">
-        <img src="mcdonalds.png" class="topbar-logo-img" alt="McDonald's">
+        <img src="data:image/png;base64,{logo_b64}" class="topbar-logo-img" alt="McDonald's">
         <div class="topbar-title">
           <h1>Performance Review</h1>
           <div class="sub">周度数据复盘看板</div>
