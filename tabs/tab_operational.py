@@ -6,7 +6,7 @@ AARR / 常规 × 渠道，堆积柱状图 + 折叠展开
 import streamlit as st
 import plotly.graph_objects as go
 import pandas as pd
-from config import MCD_RED, MCD_GOLD, MCD_GREEN, MCD_BG, CHANNELS
+from config import MCD_RED, MCD_GOLD, MCD_GREEN, CHANNELS
 from components import section_header, kpi_card, kpi_row
 
 
@@ -46,33 +46,38 @@ def _channel_detail_table(df_sub: pd.DataFrame, plan_type_label: str):
         st.info(f"没有 {plan_type_label} 的渠道数据")
         return
 
+    TH = "background:#a8001a;color:#fff;padding:9px 11px;font-weight:700;font-size:11.5px;"
+    TD = "padding:8px 11px;border-bottom:1px solid #f0e8d6;"
+    TD_EVEN = "padding:8px 11px;border-bottom:1px solid #f0e8d6;background:#fcfaf3;"
+
     rows_html = ""
-    for r in rows:
+    for i, r in enumerate(rows):
+        td_style = TD_EVEN if i % 2 == 1 else TD
         rows_html += (
-            f"<tr style='border-bottom:1px solid #F0F0F0;'>"
-            f"<td style='padding:8px;'>{r['渠道']}</td>"
-            f"<td style='text-align:right;padding:8px;'>{r['触达成功']:,}</td>"
-            f"<td style='text-align:right;padding:8px;'>{r['点击人次']:,}</td>"
-            f"<td style='text-align:right;padding:8px;'>{r['CTR']:.2f}%</td>"
-            f"<td style='text-align:right;padding:8px;'>{r['订单GC']:,}</td>"
-            f"<td style='text-align:right;padding:8px;'>{r['GC转化率']:.1f}%</td>"
-            f"<td style='text-align:right;padding:8px;'>{r['Plan数']}</td>"
-            f"<td style='text-align:right;padding:8px;'>{r['订单Sales']:,.2f}</td>"
+            f"<tr>"
+            f"<td style='{td_style}'>{r['渠道']}</td>"
+            f"<td style='{td_style}text-align:right;'>{r['触达成功']:,}</td>"
+            f"<td style='{td_style}text-align:right;'>{r['点击人次']:,}</td>"
+            f"<td style='{td_style}text-align:right;'>{r['CTR']:.2f}%</td>"
+            f"<td style='{td_style}text-align:right;'>{r['订单GC']:,}</td>"
+            f"<td style='{td_style}text-align:right;'>{r['GC转化率']:.1f}%</td>"
+            f"<td style='{td_style}text-align:right;'>{r['Plan数']}</td>"
+            f"<td style='{td_style}text-align:right;'>{r['订单Sales']:,.2f}</td>"
             f"</tr>"
         )
 
     st.markdown(
-        f'<div style="font-size:13px;font-weight:600;color:#1a1a1a;margin:12px 0 8px;">{plan_type_label} 分渠道</div>'
-        f'<table style="width:100%;border-collapse:collapse;font-size:13px;">'
-        f'<thead><tr style="border-bottom:2px solid #E8E8E8;">'
-        f'<th style="text-align:left;padding:8px;color:#666;font-size:11px;">渠道</th>'
-        f'<th style="text-align:right;padding:8px;color:#666;font-size:11px;">触达成功</th>'
-        f'<th style="text-align:right;padding:8px;color:#666;font-size:11px;">点击人次</th>'
-        f'<th style="text-align:right;padding:8px;color:#666;font-size:11px;">CTR</th>'
-        f'<th style="text-align:right;padding:8px;color:#666;font-size:11px;">订单GC</th>'
-        f'<th style="text-align:right;padding:8px;color:#666;font-size:11px;">GC转化率</th>'
-        f'<th style="text-align:right;padding:8px;color:#666;font-size:11px;">Plan数</th>'
-        f'<th style="text-align:right;padding:8px;color:#666;font-size:11px;">订单Sales</th>'
+        f'<div style="font-size:13px;font-weight:600;color:#2b2620;margin:12px 0 8px;">{plan_type_label} 分渠道</div>'
+        f'<table style="width:100%;border-collapse:collapse;font-size:13px;background:#fffdf8;border-radius:9px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);">'
+        f'<thead><tr>'
+        f'<th style="{TH}text-align:left;">渠道</th>'
+        f'<th style="{TH}text-align:right;">触达成功</th>'
+        f'<th style="{TH}text-align:right;">点击人次</th>'
+        f'<th style="{TH}text-align:right;">CTR</th>'
+        f'<th style="{TH}text-align:right;">订单GC</th>'
+        f'<th style="{TH}text-align:right;">GC转化率</th>'
+        f'<th style="{TH}text-align:right;">Plan数</th>'
+        f'<th style="{TH}text-align:right;">订单Sales</th>'
         f'</tr></thead>'
         f'<tbody>{rows_html}</tbody>'
         f'</table>',
@@ -157,8 +162,8 @@ def render(df: pd.DataFrame, target: int):
         barmode="stack",
         height=320,
         margin=dict(l=40, r=20, t=30, b=40),
-        plot_bgcolor=MCD_BG,
-        paper_bgcolor=MCD_BG,
+        plot_bgcolor="#f4efe6",
+        paper_bgcolor="#f4efe6",
         xaxis=dict(title="", gridcolor="#E8E8E8", tickformat="%m/%d\n%a"),
         yaxis=dict(title="DAU（点击人次）", gridcolor="#E8E8E8", tickformat=","),
         legend=dict(

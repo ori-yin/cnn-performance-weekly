@@ -6,7 +6,7 @@ tab_bu.py - 第三层：BU 分析
 import streamlit as st
 import plotly.graph_objects as go
 import pandas as pd
-from config import MCD_RED, MCD_GOLD, MCD_GREEN, MCD_BG
+from config import MCD_RED, MCD_GOLD, MCD_GREEN
 from components import section_header
 
 
@@ -48,32 +48,37 @@ def render(df: pd.DataFrame):
     # ─── BU 总览表 ──────────────────────────────────────
     st.markdown('<div class="section-subheader">BU 总览</div>', unsafe_allow_html=True)
 
+    TH = "background:#a8001a;color:#fff;padding:9px 11px;font-weight:700;font-size:11.5px;"
+    TD = "padding:8px 11px;border-bottom:1px solid #f0e8d6;"
+    TD_EVEN = "padding:8px 11px;border-bottom:1px solid #f0e8d6;background:#fcfaf3;"
+
     rows_html = ""
-    for _, row in bu_df.iterrows():
+    for i, (_, row) in enumerate(bu_df.iterrows()):
+        td_style = TD_EVEN if i % 2 == 1 else TD
         rows_html += (
-            f"<tr style='border-bottom:1px solid #F0F0F0;'>"
-            f"<td style='padding:8px;font-weight:600;'>{row['BU']}</td>"
-            f"<td style='text-align:right;padding:8px;'>{row['Plan数']}</td>"
-            f"<td style='text-align:right;padding:8px;'>{row['触达成功']:,}</td>"
-            f"<td style='text-align:right;padding:8px;'>{row['点击人次']:,}</td>"
-            f"<td style='text-align:right;padding:8px;'>{row['CTR']:.2f}%</td>"
-            f"<td style='text-align:right;padding:8px;'>{row['订单GC']:,}</td>"
-            f"<td style='text-align:right;padding:8px;'>{row['GC转化率']:.1f}%</td>"
-            f"<td style='text-align:right;padding:8px;'>{row['订单Sales']:,.2f}</td>"
+            f"<tr>"
+            f"<td style='{td_style}font-weight:600;'>{row['BU']}</td>"
+            f"<td style='{td_style}text-align:right;'>{row['Plan数']}</td>"
+            f"<td style='{td_style}text-align:right;'>{row['触达成功']:,}</td>"
+            f"<td style='{td_style}text-align:right;'>{row['点击人次']:,}</td>"
+            f"<td style='{td_style}text-align:right;'>{row['CTR']:.2f}%</td>"
+            f"<td style='{td_style}text-align:right;'>{row['订单GC']:,}</td>"
+            f"<td style='{td_style}text-align:right;'>{row['GC转化率']:.1f}%</td>"
+            f"<td style='{td_style}text-align:right;'>{row['订单Sales']:,.2f}</td>"
             f"</tr>"
         )
 
     st.markdown(
-        f'<table style="width:100%;border-collapse:collapse;font-size:13px;">'
-        f'<thead><tr style="border-bottom:2px solid #E8E8E8;">'
-        f'<th style="text-align:left;padding:8px;color:#666;font-size:11px;">BU</th>'
-        f'<th style="text-align:right;padding:8px;color:#666;font-size:11px;">Plan数</th>'
-        f'<th style="text-align:right;padding:8px;color:#666;font-size:11px;">触达成功</th>'
-        f'<th style="text-align:right;padding:8px;color:#666;font-size:11px;">点击人次</th>'
-        f'<th style="text-align:right;padding:8px;color:#666;font-size:11px;">CTR</th>'
-        f'<th style="text-align:right;padding:8px;color:#666;font-size:11px;">订单GC</th>'
-        f'<th style="text-align:right;padding:8px;color:#666;font-size:11px;">GC转化率</th>'
-        f'<th style="text-align:right;padding:8px;color:#666;font-size:11px;">订单Sales</th>'
+        f'<table style="width:100%;border-collapse:collapse;font-size:13px;background:#fffdf8;border-radius:9px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);">'
+        f'<thead><tr>'
+        f'<th style="{TH}text-align:left;">BU</th>'
+        f'<th style="{TH}text-align:right;">Plan数</th>'
+        f'<th style="{TH}text-align:right;">触达成功</th>'
+        f'<th style="{TH}text-align:right;">点击人次</th>'
+        f'<th style="{TH}text-align:right;">CTR</th>'
+        f'<th style="{TH}text-align:right;">订单GC</th>'
+        f'<th style="{TH}text-align:right;">GC转化率</th>'
+        f'<th style="{TH}text-align:right;">订单Sales</th>'
         f'</tr></thead>'
         f'<tbody>{rows_html}</tbody>'
         f'</table>',
@@ -108,8 +113,8 @@ def render(df: pd.DataFrame):
     fig.update_layout(
         height=300,
         margin=dict(l=40, r=20, t=30, b=60),
-        plot_bgcolor=MCD_BG,
-        paper_bgcolor=MCD_BG,
+        plot_bgcolor="#f4efe6",
+        paper_bgcolor="#f4efe6",
         xaxis=dict(title="", gridcolor="#E8E8E8", tickangle=-30),
         yaxis=dict(title=chart_metric, gridcolor="#E8E8E8", tickformat=","),
         showlegend=False,

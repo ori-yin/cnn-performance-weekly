@@ -6,7 +6,7 @@ KPI Cards + 每日 DAU 趋势图 + Nudge Type 堆积柱状图
 import streamlit as st
 import plotly.graph_objects as go
 import pandas as pd
-from config import MCD_RED, MCD_GOLD, MCD_GREEN, MCD_BG
+from config import MCD_RED, MCD_GOLD, MCD_GREEN
 from components import kpi_card, kpi_row, section_header
 
 
@@ -104,8 +104,8 @@ def render(df: pd.DataFrame, target: int):
     fig.update_layout(
         height=320,
         margin=dict(l=40, r=20, t=30, b=40),
-        plot_bgcolor=MCD_BG,
-        paper_bgcolor=MCD_BG,
+        plot_bgcolor="#f4efe6",
+        paper_bgcolor="#f4efe6",
         xaxis=dict(title="", gridcolor="#E8E8E8", tickformat="%m/%d\n%a"),
         yaxis=dict(title="DAU", gridcolor="#E8E8E8", tickformat=","),
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, font=dict(size=11)),
@@ -169,8 +169,8 @@ def render(df: pd.DataFrame, target: int):
         barmode="stack",
         height=300,
         margin=dict(l=40, r=20, t=30, b=40),
-        plot_bgcolor=MCD_BG,
-        paper_bgcolor=MCD_BG,
+        plot_bgcolor="#f4efe6",
+        paper_bgcolor="#f4efe6",
         xaxis=dict(title="", gridcolor="#E8E8E8", tickformat="%m/%d\n%a"),
         yaxis=dict(title="DAU（点击人次）", gridcolor="#E8E8E8", tickformat=","),
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, font=dict(size=11)),
