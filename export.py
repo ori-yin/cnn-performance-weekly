@@ -338,7 +338,17 @@ def _render_kpi_row(cards_html: list) -> str:
 
 def _fig_to_html(fig) -> str:
     """将 Plotly 图表转为 HTML 片段"""
-    return fig.to_html(include_plotlyjs=False, full_html=False)
+    # 确保图表有明确的尺寸
+    if fig.layout.height is None:
+        fig.update_layout(height=300)
+    if fig.layout.width is None:
+        fig.update_layout(width=None)  # 让宽度自适应
+
+    # 生成 HTML
+    html = fig.to_html(include_plotlyjs=False, full_html=False)
+
+    # 包裹在有明确尺寸的容器中
+    return f'<div style="width:100%;min-height:{fig.layout.height or 300}px;">{html}</div>'
 
 
 def _render_section(num: int, title: str, content: str) -> str:
