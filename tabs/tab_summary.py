@@ -179,10 +179,10 @@ def render(df: pd.DataFrame, target: int):
 
     st.plotly_chart(fig2, use_container_width=True)
 
-    # ─── 返回数据供导出（创建副本避免 Streamlit 修改）─────────
-    import copy
-    fig_copy = copy.deepcopy(fig)
-    fig2_copy = copy.deepcopy(fig2)
+    # ─── 返回数据供导出（用 JSON 序列化避免 deepcopy 问题）─────
+    import json
+    fig_json = fig.to_json()
+    fig2_json = fig2.to_json()
 
     kpis = {
         "avg_dau": round(avg_dau),
@@ -193,5 +193,5 @@ def render(df: pd.DataFrame, target: int):
         "total_sales": total_sales,
         "status": status_actual,
     }
-    figs = [fig_copy, fig2_copy]
+    figs = [fig_json, fig2_json]
     return figs, kpis

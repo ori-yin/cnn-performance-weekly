@@ -236,10 +236,10 @@ def render(df: pd.DataFrame, target: int):
     if len(df_normal) > 0:
         _channel_detail_table(df_normal, "常规")
 
-    # ─── 返回数据供导出（创建副本避免 Streamlit 修改）─────────
-    import copy
-    fig_copy = copy.deepcopy(fig)
-    fig2_copy = copy.deepcopy(fig2)
+    # ─── 返回数据供导出（用 JSON 序列化避免 deepcopy 问题）─────
+    import json
+    fig_json = fig.to_json()
+    fig2_json = fig2.to_json()
 
     kpis = {
         "total_reach": int(m_total["触达成功"]),
@@ -247,5 +247,5 @@ def render(df: pd.DataFrame, target: int):
         "aarr_pct": round(m_aarr["点击人次"] / m_total["点击人次"] * 100, 1) if m_total["点击人次"] > 0 else 0,
         "normal_pct": round(m_normal["点击人次"] / m_total["点击人次"] * 100, 1) if m_total["点击人次"] > 0 else 0,
     }
-    figs = [fig_copy, fig2_copy]
+    figs = [fig_json, fig2_json]
     return figs, kpis

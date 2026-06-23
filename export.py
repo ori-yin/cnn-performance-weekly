@@ -336,13 +336,17 @@ def _render_kpi_row(cards_html: list) -> str:
     return f'<div class="kpi-grid">{"".join(cards_html)}</div>'
 
 
-def _fig_to_html(fig) -> str:
-    """将 Plotly 图表转为 HTML 片段"""
+def _fig_to_html(fig_json: str) -> str:
+    """将 Plotly 图表 JSON 转为 HTML 片段"""
+    import plotly.graph_objects as go
+    import json
+
+    # 从 JSON 重建图表
+    fig = go.Figure(json.loads(fig_json))
+
     # 确保图表有明确的尺寸
     if fig.layout.height is None:
         fig.update_layout(height=300)
-    if fig.layout.width is None:
-        fig.update_layout(width=None)  # 让宽度自适应
 
     # 生成 HTML
     html = fig.to_html(include_plotlyjs=False, full_html=False)

@@ -191,10 +191,10 @@ def render(df: pd.DataFrame):
         showlegend=False, font=dict(family="'PingFang SC', 'Microsoft YaHei', sans-serif"),
     )
 
-    # 创建副本避免 Streamlit 修改
-    import copy
-    fig_reach_copy = copy.deepcopy(fig_reach)
-    fig_click_copy = copy.deepcopy(fig_click)
+    # 用 JSON 序列化避免 deepcopy 问题
+    import json
+    fig_reach_json = fig_reach.to_json()
+    fig_click_json = fig_click.to_json()
 
-    figs = [fig_reach_copy, fig_click_copy]
+    figs = [fig_reach_json, fig_click_json]
     return figs, bu_table_html
