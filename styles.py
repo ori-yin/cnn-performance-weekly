@@ -270,16 +270,21 @@ def get_css() -> str:
   .nav-link {{
     font-size: 11.5px;
     font-weight: 700;
-    color: #5a5048;
-    padding: 4px 11px;
+    color: #fff;
+    background: #DA291C;
+    padding: 6px 14px;
     border-radius: 16px;
     text-decoration: none;
     transition: .15s;
     white-space: nowrap;
   }}
   .nav-link:hover {{
-    background: #fde9ea;
-    color: #DA291C;
+    background: #a8001a;
+    color: #fff;
+  }}
+  .nav-link.active {{
+    background: #a8001a;
+    color: #fff;
   }}
 
   /* ─── 紧凑间距 ─── */

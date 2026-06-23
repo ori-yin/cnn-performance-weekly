@@ -7,6 +7,7 @@ from datetime import date, timedelta
 
 from config import MCD_RED, MCD_GOLD
 from data import read_data, filter_week_data
+from scoring import compute_scores
 from styles import get_css
 from tabs.tab_summary import render as render_summary
 from tabs.tab_operational import render as render_operational
@@ -37,7 +38,7 @@ def render_nav():
     """渲染导航栏（锚点跳转，单页滚动）"""
     st.markdown("""
     <div class="nav-bar">
-      <a class="nav-link" href="#sec-summary">Executive Summary</a>
+      <a class="nav-link active" href="#sec-summary">Executive Summary</a>
       <a class="nav-link" href="#sec-operational">Operational Analysis</a>
       <a class="nav-link" href="#sec-bu">BU Analysis</a>
       <a class="nav-link" href="#sec-plan">Plan Analysis</a>
@@ -103,6 +104,9 @@ def main():
     if df.empty:
         st.warning(f"所选日期范围 [{start_date} ~ {end_date}] 内无数据")
         return
+
+    # 计算综合评分
+    df = compute_scores(df)
 
     # ─── 维度筛选（需数据加载后才有选项）─────────────────────
     with st.sidebar:
