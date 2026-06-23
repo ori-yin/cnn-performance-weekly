@@ -253,7 +253,7 @@ def get_css() -> str:
     margin-bottom: 3px;
   }}
 
-  /* ─── 导航栏（锚点链接）────────────────────────────────────── */
+  /* ─── 导航栏（锚点链接，参考 ITO）────────────────────────────── */
   .nav-bar {{
     position: sticky;
     top: 57px;
@@ -270,21 +270,17 @@ def get_css() -> str:
   .nav-link {{
     font-size: 11.5px;
     font-weight: 700;
-    color: #fff;
-    background: #DA291C;
-    padding: 6px 14px;
+    color: #5a5048;
+    background: transparent;
+    padding: 4px 11px;
     border-radius: 16px;
     text-decoration: none;
     transition: .15s;
     white-space: nowrap;
   }}
   .nav-link:hover {{
-    background: #a8001a;
-    color: #fff;
-  }}
-  .nav-link.active {{
-    background: #a8001a;
-    color: #fff;
+    background: #fde9ea;
+    color: #DA291C;
   }}
 
   /* ─── 紧凑间距 ─── */

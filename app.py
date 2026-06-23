@@ -38,7 +38,7 @@ def render_nav():
     """渲染导航栏（锚点跳转，单页滚动）"""
     st.markdown("""
     <div class="nav-bar">
-      <a class="nav-link active" href="#sec-summary">Executive Summary</a>
+      <a class="nav-link" href="#sec-summary">Executive Summary</a>
       <a class="nav-link" href="#sec-operational">Operational Analysis</a>
       <a class="nav-link" href="#sec-bu">BU Analysis</a>
       <a class="nav-link" href="#sec-plan">Plan Analysis</a>
@@ -63,7 +63,7 @@ def main():
     # ─── 导航栏 ─────────────────────────────────────────
     render_nav()
 
-    # ─── 侧边栏 ─────────────────────────────────────────
+    # ─── 侧边栏：文件上传 ────────────────────────────────
     with st.sidebar:
         st.markdown("### 数据设置")
         uploaded = st.file_uploader(
@@ -81,14 +81,6 @@ def main():
             help="本周每日目标触达人次",
         )
 
-        st.markdown("---")
-        st.markdown("##### 日期范围")
-        today = date.today()
-        default_start = today - timedelta(days=today.weekday() + 7)
-        default_end = default_start + timedelta(days=6)
-        start_date = st.date_input("开始日期", value=default_start)
-        end_date = st.date_input("结束日期", value=default_end)
-
     # ─── 数据读取 ─────────────────────────────────────────
     if uploaded is not None:
         raw_df = read_data(uploaded)
@@ -99,6 +91,16 @@ def main():
     if raw_df is None or raw_df.empty:
         st.error("数据文件读取失败或为空")
         return
+
+    # ─── 侧边栏：日期范围（根据数据自动限定）─────────────────
+    data_min = raw_df["发送日期"].min().date()
+    data_max = raw_df["发送日期"].max().date()
+
+    with st.sidebar:
+        st.markdown("---")
+        st.markdown("##### 日期范围")
+        start_date = st.date_input("开始日期", value=data_min, min_value=data_min, max_value=data_max)
+        end_date = st.date_input("结束日期", value=data_max, min_value=data_min, max_value=data_max)
 
     df = filter_week_data(raw_df, start_date, end_date)
     if df.empty:
