@@ -78,16 +78,16 @@ def render(df: pd.DataFrame, target: int):
         fillcolor="rgba(218,41,28,0.05)",
     ))
 
-    # Target 水平线
+    # Target 水平线（黑色）
     if target > 0:
         fig.add_hline(
             y=target,
             line_dash="dash",
-            line_color=MCD_GOLD,
+            line_color="#1a1a1a",
             line_width=2,
             annotation_text=f"Target: {target:,.0f}",
             annotation_position="top right",
-            annotation_font=dict(size=12, color=MCD_GOLD),
+            annotation_font=dict(size=12, color="#1a1a1a"),
         )
 
         # 标记未完成的点

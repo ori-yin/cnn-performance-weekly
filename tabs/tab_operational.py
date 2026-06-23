@@ -218,8 +218,9 @@ def render(df: pd.DataFrame, target: int):
                 ))
 
         if target > 0:
-            fig2.add_hline(y=target, line_dash="dash", line_color="#999", line_width=1.5,
-                           annotation_text="Target", annotation_position="top right")
+            fig2.add_hline(y=target, line_dash="dash", line_color="#1a1a1a", line_width=1.5,
+                           annotation_text="Target", annotation_position="top right",
+                           annotation_font=dict(size=12, color="#1a1a1a"))
 
         fig2.update_layout(
             height=280,

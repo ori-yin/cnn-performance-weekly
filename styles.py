@@ -267,20 +267,25 @@ def get_css() -> str:
     padding: 8px 20px;
     margin: 0 -1rem 1rem -1rem;
   }}
-  .nav-link {{
-    font-size: 11.5px;
-    font-weight: 700;
-    color: #5a5048;
-    background: transparent;
-    padding: 4px 11px;
-    border-radius: 16px;
-    text-decoration: none;
+  .nav-bar a.nav-link,
+  .nav-bar a.nav-link:link,
+  .nav-bar a.nav-link:visited,
+  .nav-bar a.nav-link:active {{
+    font-size: 11.5px !important;
+    font-weight: 700 !important;
+    color: #5a5048 !important;
+    background: transparent !important;
+    padding: 4px 11px !important;
+    border-radius: 16px !important;
+    text-decoration: none !important;
+    border-bottom: none !important;
     transition: .15s;
     white-space: nowrap;
   }}
-  .nav-link:hover {{
-    background: #fde9ea;
-    color: #DA291C;
+  .nav-bar a.nav-link:hover {{
+    background: #fde9ea !important;
+    color: #DA291C !important;
+    text-decoration: none !important;
   }}
 
   /* ─── 紧凑间距 ─── */

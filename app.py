@@ -76,8 +76,8 @@ def main():
         target_dau = st.number_input(
             "Target DAU（日均）",
             min_value=0,
-            value=1000,
-            step=100,
+            value=50000,
+            step=1000,
             help="本周每日目标触达人次",
         )
 
