@@ -424,7 +424,6 @@ def generate_html(df, target: int, figs: dict, tables: dict, kpis: dict) -> str:
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Performance Review - {today_str}</title>
-<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
 {_get_css()}
 </head>
 <body>
