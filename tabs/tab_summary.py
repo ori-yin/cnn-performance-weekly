@@ -103,7 +103,7 @@ def render(df: pd.DataFrame, target: int):
 
     fig.update_layout(
         height=320,
-        margin=dict(l=40, r=20, t=30, b=40),
+        margin=dict(l=60, r=20, t=30, b=40),
         plot_bgcolor="#f4efe6",
         paper_bgcolor="#f4efe6",
         xaxis=dict(title="", gridcolor="#E8E8E8", tickformat="%m/%d\n%a"),
@@ -168,7 +168,7 @@ def render(df: pd.DataFrame, target: int):
     fig2.update_layout(
         barmode="stack",
         height=300,
-        margin=dict(l=40, r=20, t=30, b=40),
+        margin=dict(l=60, r=20, t=30, b=40),
         plot_bgcolor="#f4efe6",
         paper_bgcolor="#f4efe6",
         xaxis=dict(title="", gridcolor="#E8E8E8", tickformat="%m/%d\n%a"),

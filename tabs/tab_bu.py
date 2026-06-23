@@ -112,7 +112,7 @@ def render(df: pd.DataFrame):
 
     fig.update_layout(
         height=300,
-        margin=dict(l=40, r=20, t=30, b=60),
+        margin=dict(l=60, r=20, t=30, b=60),
         plot_bgcolor="#f4efe6",
         paper_bgcolor="#f4efe6",
         xaxis=dict(title="", gridcolor="#E8E8E8", tickangle=-30),
