@@ -64,6 +64,10 @@ def render_fixed_header_js():
 
         var main = parent.document.querySelector('[data-testid="stAppViewContent"]');
         if (main) main.style.paddingTop = '100px';
+
+        // 侧边栏固定宽度 280px
+        topbar.style.right = '280px';
+        navBar.style.right = '280px';
       }
 
       setupFixedHeader();

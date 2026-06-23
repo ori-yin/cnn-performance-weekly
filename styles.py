@@ -305,13 +305,23 @@ def get_css() -> str:
     gap: 0.4rem !important;
   }}
 
-  /* ─── 调整 Streamlit 默认 header（保留侧边栏切换按钮）─── */
+  /* ─── 隐藏侧边栏折叠按钮，固定侧边栏 ─── */
+  [data-testid="stSidebarCollapseButton"],
+  [data-testid="stSidebarCollapseButton"] button {{
+    display: none !important;
+  }}
+  [data-testid="stSidebar"] {{
+    min-width: 280px !important;
+    max-width: 280px !important;
+  }}
+
+  /* ─── 调整 Streamlit 默认 header ─── */
   header[data-testid="stHeader"] {{
     background: transparent !important;
     box-shadow: none !important;
   }}
   header[data-testid="stHeader"] button[kind="header"] {{
-    color: #2b2620 !important;
+    display: none !important;
   }}
 
   /* ─── 隐藏 Streamlit footer ─── */
