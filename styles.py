@@ -296,9 +296,13 @@ def get_css() -> str:
     gap: 0.4rem !important;
   }}
 
-  /* ─── 隐藏 Streamlit 默认 header ─── */
+  /* ─── 调整 Streamlit 默认 header（保留侧边栏切换按钮）─── */
   header[data-testid="stHeader"] {{
-    display: none;
+    background: transparent !important;
+    box-shadow: none !important;
+  }}
+  header[data-testid="stHeader"] button[kind="header"] {{
+    color: #2b2620 !important;
   }}
 
   /* ─── 隐藏 Streamlit footer ─── */
