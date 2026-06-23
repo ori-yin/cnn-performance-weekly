@@ -88,7 +88,6 @@ def main():
     if active_tab != st.session_state.active_tab:
         st.session_state.active_tab = active_tab
         st.query_params["tab"] = active_tab
-        st.rerun()
 
     # ─── 侧边栏 ─────────────────────────────────────────
     with st.sidebar:
@@ -121,15 +120,19 @@ def main():
         st.markdown("---")
         st.markdown("##### 维度筛选")
 
-    # ─── 数据读取 ─────────────────────────────────────────
+    # ─── 数据读取（缓存到 session_state）─────────────────────
     if uploaded is not None:
-        raw_df = read_data(uploaded)
-    else:
-        st.info("请在左侧上传 Excel 或 CSV 数据文件")
-        return
+        # 文件有变化时重新读取
+        file_key = f"{uploaded.name}_{uploaded.size}"
+        if st.session_state.get("_file_key") != file_key:
+            raw_df = read_data(uploaded)
+            if raw_df is not None and not raw_df.empty:
+                st.session_state["_raw_df"] = raw_df
+                st.session_state["_file_key"] = file_key
 
-    if raw_df is None or raw_df.empty:
-        st.error("数据文件读取失败或为空")
+    raw_df = st.session_state.get("_raw_df")
+    if raw_df is None:
+        st.info("请在左侧上传 Excel 或 CSV 数据文件")
         return
 
     # 日期筛选
