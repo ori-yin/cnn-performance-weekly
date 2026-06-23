@@ -48,38 +48,30 @@ def render_nav():
 
 def render_fixed_header_js():
     """用 JS 把 topbar 和 nav 移到 body 层级，实现真正固定"""
-    st.markdown("""
+    import streamlit.components.v1 as components
+    components.html("""
     <script>
     (function() {
       function setupFixedHeader() {
-        var topbar = document.querySelector('.topbar');
-        var navBar = document.querySelector('.nav-bar');
+        var topbar = parent.document.querySelector('.topbar');
+        var navBar = parent.document.querySelector('.nav-bar');
         if (!topbar || !navBar) return;
-        if (topbar.dataset.fixed) return; // 已处理
+        if (topbar.dataset.fixed) return;
 
-        // 标记已处理
         topbar.dataset.fixed = '1';
+        parent.document.body.insertBefore(topbar, parent.document.body.firstChild);
+        parent.document.body.insertBefore(navBar, topbar.nextSibling);
 
-        // 移到 body 最前面
-        document.body.insertBefore(topbar, document.body.firstChild);
-        document.body.insertBefore(navBar, topbar.nextSibling);
-
-        // 给主内容区加 padding
-        var main = document.querySelector('[data-testid="stAppViewContent"]');
+        var main = parent.document.querySelector('[data-testid="stAppViewContent"]');
         if (main) main.style.paddingTop = '100px';
       }
 
-      // 等待 DOM 就绪
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', setupFixedHeader);
-      } else {
-        setupFixedHeader();
-      }
-      // Streamlit 动态渲染后重试
+      setupFixedHeader();
       setTimeout(setupFixedHeader, 500);
+      setTimeout(setupFixedHeader, 1000);
     })();
     </script>
-    """, unsafe_allow_html=True)
+    """, height=0)
 
 
 def main():
