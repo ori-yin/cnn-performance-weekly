@@ -85,7 +85,6 @@ def _channel_detail_table(df_sub: pd.DataFrame, plan_type_label: str) -> str:
 
     st.markdown(table_html, unsafe_allow_html=True)
     return table_html
-    )
 
 
 def render(df: pd.DataFrame, target: int):
