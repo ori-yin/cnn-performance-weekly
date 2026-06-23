@@ -96,11 +96,20 @@ def main():
     data_min = raw_df["发送日期"].min().date()
     data_max = raw_df["发送日期"].max().date()
 
+    # 默认上一个自然周（周一~周日）
+    today = date.today()
+    days_since_monday = today.weekday()
+    default_end = today - timedelta(days=days_since_monday + 1)  # 上周日
+    default_start = default_end - timedelta(days=6)               # 上周一
+    # 确保不超出数据范围
+    default_start = max(default_start, data_min)
+    default_end = min(default_end, data_max)
+
     with st.sidebar:
         st.markdown("---")
         st.markdown("##### 日期范围")
-        start_date = st.date_input("开始日期", value=data_min, min_value=data_min, max_value=data_max)
-        end_date = st.date_input("结束日期", value=data_max, min_value=data_min, max_value=data_max)
+        start_date = st.date_input("开始日期", value=default_start, min_value=data_min, max_value=data_max)
+        end_date = st.date_input("结束日期", value=default_end, min_value=data_min, max_value=data_max)
 
     df = filter_week_data(raw_df, start_date, end_date)
     if df.empty:

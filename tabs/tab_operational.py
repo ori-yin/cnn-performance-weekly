@@ -179,57 +179,59 @@ def render(df: pd.DataFrame, target: int):
 
     st.plotly_chart(fig, use_container_width=True)
 
-    # ─── 分渠道明细（折叠）─────────────────────────────
-    with st.expander("▼ 分渠道明细", expanded=False):
-        df_aarr = df_op[df_op["计划类型"] == "AARRPlan"]
-        df_normal = df_op[df_op["计划类型"] == "常规Plan"]
+    # ─── 分渠道每日趋势 ─────────────────────────────────
+    st.markdown('<div class="section-subheader">分渠道每日趋势</div>', unsafe_allow_html=True)
 
-        if len(df_aarr) > 0:
-            _channel_detail_table(df_aarr, "AARR")
+    daily_ch = df_op.groupby([df_op["发送日期"].dt.date, "渠道"]).agg(
+        DAU=("点击人次", "sum"),
+    ).reset_index()
+    daily_ch.columns = ["日期", "渠道", "DAU"]
 
-        if len(df_normal) > 0:
-            _channel_detail_table(df_normal, "常规")
+    ch_colors = {
+        "APP Push": MCD_RED,
+        "企微1v1": MCD_GOLD,
+        "短信": MCD_GREEN,
+        "微信小程序订阅消息": "#5B5BD6",
+    }
 
-    # ─── 分渠道每日趋势（折叠）─────────────────────────
-    with st.expander("▼ 分渠道每日趋势", expanded=False):
-        daily_ch = df_op.groupby([df_op["发送日期"].dt.date, "渠道"]).agg(
-            DAU=("点击人次", "sum"),
-        ).reset_index()
-        daily_ch.columns = ["日期", "渠道", "DAU"]
+    fig2 = go.Figure()
+    for ch in CHANNELS:
+        subset = daily_ch[daily_ch["渠道"] == ch]
+        if len(subset) > 0:
+            fig2.add_trace(go.Scatter(
+                x=subset["日期"],
+                y=subset["DAU"],
+                mode="lines+markers",
+                name=ch,
+                line=dict(color=ch_colors.get(ch, "#999"), width=2),
+                marker=dict(size=4),
+            ))
 
-        ch_colors = {
-            "APP Push": MCD_RED,
-            "企微1v1": MCD_GOLD,
-            "短信": MCD_GREEN,
-            "微信小程序订阅消息": "#5B5BD6",
-        }
+    if target > 0:
+        fig2.add_hline(y=target, line_dash="dash", line_color="#1a1a1a", line_width=1.5,
+                       annotation_text="Target", annotation_position="top right",
+                       annotation_font=dict(size=12, color="#1a1a1a"))
 
-        fig2 = go.Figure()
-        for ch in CHANNELS:
-            subset = daily_ch[daily_ch["渠道"] == ch]
-            if len(subset) > 0:
-                fig2.add_trace(go.Scatter(
-                    x=subset["日期"],
-                    y=subset["DAU"],
-                    mode="lines+markers",
-                    name=ch,
-                    line=dict(color=ch_colors.get(ch, "#999"), width=2),
-                    marker=dict(size=4),
-                ))
+    fig2.update_layout(
+        height=280,
+        margin=dict(l=40, r=20, t=30, b=40),
+        plot_bgcolor=MCD_BG,
+        paper_bgcolor=MCD_BG,
+        xaxis=dict(title="", gridcolor="#E8E8E8", tickformat="%m/%d"),
+        yaxis=dict(title="DAU", gridcolor="#E8E8E8", tickformat=","),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, font=dict(size=11)),
+        font=dict(family="'PingFang SC', 'Microsoft YaHei', sans-serif"),
+    )
+    st.plotly_chart(fig2, use_container_width=True)
 
-        if target > 0:
-            fig2.add_hline(y=target, line_dash="dash", line_color="#1a1a1a", line_width=1.5,
-                           annotation_text="Target", annotation_position="top right",
-                           annotation_font=dict(size=12, color="#1a1a1a"))
+    # ─── 分渠道明细 ──────────────────────────────────────
+    st.markdown('<div class="section-subheader">分渠道明细</div>', unsafe_allow_html=True)
 
-        fig2.update_layout(
-            height=280,
-            margin=dict(l=40, r=20, t=30, b=40),
-            plot_bgcolor=MCD_BG,
-            paper_bgcolor=MCD_BG,
-            xaxis=dict(title="", gridcolor="#E8E8E8", tickformat="%m/%d"),
-            yaxis=dict(title="DAU", gridcolor="#E8E8E8", tickformat=","),
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, font=dict(size=11)),
-            font=dict(family="'PingFang SC', 'Microsoft YaHei', sans-serif"),
-        )
-        st.plotly_chart(fig2, use_container_width=True)
+    df_aarr = df_op[df_op["计划类型"] == "AARRPlan"]
+    df_normal = df_op[df_op["计划类型"] == "常规Plan"]
+
+    if len(df_aarr) > 0:
+        _channel_detail_table(df_aarr, "AARR")
+
+    if len(df_normal) > 0:
+        _channel_detail_table(df_normal, "常规")

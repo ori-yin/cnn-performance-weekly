@@ -300,6 +300,14 @@ def get_css() -> str:
     gap: 0.4rem !important;
   }}
 
+  /* ─── 确保 sticky 定位生效 ─── */
+  .stApp {{
+    overflow: visible !important;
+  }}
+  [data-testid="stAppViewContainer"] {{
+    overflow: visible !important;
+  }}
+
   /* ─── 调整 Streamlit 默认 header（保留侧边栏切换按钮）─── */
   header[data-testid="stHeader"] {{
     background: transparent !important;
