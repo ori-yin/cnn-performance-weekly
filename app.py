@@ -43,22 +43,41 @@ def render_nav():
       <a class="nav-link" href="#sec-bu">BU Analysis</a>
       <a class="nav-link" href="#sec-plan">Plan Analysis</a>
     </div>
+    """, unsafe_allow_html=True)
+
+
+def render_fixed_header_js():
+    """用 JS 把 topbar 和 nav 移到 body 层级，实现真正固定"""
+    st.markdown("""
     <script>
-    // 确保 sticky 定位生效
-    document.addEventListener('DOMContentLoaded', function() {
-      var topbar = document.querySelector('.topbar');
-      var navBar = document.querySelector('.nav-bar');
-      if (topbar) {
-        topbar.style.position = 'sticky';
-        topbar.style.top = '0';
-        topbar.style.zIndex = '100';
+    (function() {
+      function setupFixedHeader() {
+        var topbar = document.querySelector('.topbar');
+        var navBar = document.querySelector('.nav-bar');
+        if (!topbar || !navBar) return;
+        if (topbar.dataset.fixed) return; // 已处理
+
+        // 标记已处理
+        topbar.dataset.fixed = '1';
+
+        // 移到 body 最前面
+        document.body.insertBefore(topbar, document.body.firstChild);
+        document.body.insertBefore(navBar, topbar.nextSibling);
+
+        // 给主内容区加 padding
+        var main = document.querySelector('[data-testid="stAppViewContent"]');
+        if (main) main.style.paddingTop = '100px';
       }
-      if (navBar) {
-        navBar.style.position = 'sticky';
-        navBar.style.top = '57px';
-        navBar.style.zIndex = '90';
+
+      // 等待 DOM 就绪
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', setupFixedHeader);
+      } else {
+        setupFixedHeader();
       }
-    });
+      // Streamlit 动态渲染后重试
+      setTimeout(setupFixedHeader, 500);
+    })();
     </script>
     """, unsafe_allow_html=True)
 
@@ -79,6 +98,9 @@ def main():
 
     # ─── 导航栏 ─────────────────────────────────────────
     render_nav()
+
+    # ─── 固定 header JS ──────────────────────────────────
+    render_fixed_header_js()
 
     # ─── 侧边栏：文件上传 ────────────────────────────────
     with st.sidebar:

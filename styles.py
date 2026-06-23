@@ -208,11 +208,11 @@ def get_css() -> str:
     justify-content: space-between;
     padding: 10px 26px;
     box-shadow: 0 2px 14px rgba(0,0,0,.18);
-    position: -webkit-sticky;
-    position: sticky;
+    position: fixed;
     top: 0;
+    left: 0;
+    right: 0;
     z-index: 100;
-    margin: -1.5rem -1rem 0 -1rem;
   }}
   .topbar-left {{
     display: flex;
@@ -259,9 +259,10 @@ def get_css() -> str:
 
   /* ─── 导航栏（锚点链接，参考 ITO）────────────────────────────── */
   .nav-bar {{
-    position: -webkit-sticky;
-    position: sticky;
+    position: fixed;
     top: 57px;
+    left: 0;
+    right: 0;
     z-index: 90;
     background: rgba(255,253,248,.96);
     backdrop-filter: blur(6px);
@@ -270,7 +271,6 @@ def get_css() -> str:
     flex-wrap: wrap;
     gap: 4px;
     padding: 8px 20px;
-    margin: 0 -1rem 1rem -1rem;
   }}
   .nav-bar a.nav-link,
   .nav-bar a.nav-link:link,
