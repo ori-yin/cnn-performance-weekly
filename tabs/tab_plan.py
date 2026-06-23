@@ -109,7 +109,7 @@ def _render_plan_card(row: pd.Series, rank: int, is_good: bool):
 def render(df: pd.DataFrame):
     """渲染 Plan 分析层"""
 
-    st.markdown(section_header("Plan 分析", "每个渠道 Top 3 / Bottom 3（按综合评分）"), unsafe_allow_html=True)
+    st.markdown(section_header("Plan 分析", ""), unsafe_allow_html=True)
 
     if "综合评分" not in df.columns:
         st.warning("数据中缺少综合评分，请检查评分算法")

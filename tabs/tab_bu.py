@@ -26,7 +26,7 @@ def _compute_bu_metrics(df: pd.DataFrame) -> dict:
 def render(df: pd.DataFrame):
     """渲染 BU 分析层"""
 
-    st.markdown(section_header("BU 分析", "按预算 owner 聚合"), unsafe_allow_html=True)
+    st.markdown(section_header("BU 分析", ""), unsafe_allow_html=True)
 
     # 按 BU 聚合
     bu_groups = df.groupby("预算owner")

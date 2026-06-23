@@ -13,7 +13,7 @@ from components import kpi_card, kpi_row, section_header
 def render(df: pd.DataFrame, target: int):
     """渲染 Executive Summary 层"""
 
-    st.markdown(section_header("Executive Summary", "本周 DAU 完成情况"), unsafe_allow_html=True)
+    st.markdown(section_header("Executive Summary", ""), unsafe_allow_html=True)
 
     # ─── 计算汇总指标 ──────────────────────────────────────
     total_clicks = df["点击人次"].sum()

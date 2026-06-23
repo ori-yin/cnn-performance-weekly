@@ -88,7 +88,7 @@ def _channel_detail_table(df_sub: pd.DataFrame, plan_type_label: str):
 def render(df: pd.DataFrame, target: int):
     """渲染 Operational 分析层"""
 
-    st.markdown(section_header("Operational 分析", "AARR / 常规 × 渠道"), unsafe_allow_html=True)
+    st.markdown(section_header("Operational 分析", ""), unsafe_allow_html=True)
 
     # 筛选 Operational 数据
     df_op = df[df["计划类型"].notna()].copy()
