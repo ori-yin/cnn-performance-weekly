@@ -192,6 +192,11 @@ def get_css() -> str:
     background: #fcfaf3 !important;
   }}
 
+  /* ─── 锚点跳转偏移（补偿固定 header 高度）─── */
+  [id^="sec-"] {{
+    scroll-margin-top: 110px;
+  }}
+
   /* ─── 分隔线 ─── */
   .divider {{
     border: none;
