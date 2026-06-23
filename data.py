@@ -196,5 +196,7 @@ def filter_week_data(df: pd.DataFrame, week_start=None, week_end=None) -> pd.Dat
         week_end = latest_date.normalize()
         week_start = week_end - pd.Timedelta(days=days_since_monday)
 
+    week_start = pd.Timestamp(week_start)
+    week_end = pd.Timestamp(week_end) + pd.Timedelta(days=1) - pd.Timedelta(seconds=1)
     mask = (df["发送日期"] >= week_start) & (df["发送日期"] <= week_end)
     return df.loc[mask].copy()
