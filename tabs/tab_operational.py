@@ -6,7 +6,7 @@ AARR / 常规 × 渠道，堆积柱状图 + 折叠展开
 import streamlit as st
 import plotly.graph_objects as go
 import pandas as pd
-from config import MCD_RED, MCD_GOLD, MCD_GREEN, CHANNELS
+from config import MCD_RED, MCD_GOLD, MCD_GREEN, MCD_BG, CHANNELS
 from components import section_header, kpi_card, kpi_row
 
 

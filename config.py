@@ -2,17 +2,28 @@
 config.py - CNN Performance Weekly：全局配置与常量
 """
 
-# ─── 品牌色 ─────────────────────────────────────────────────────
+# ─── 品牌色（暖色纸质主题）──────────────────────────────────────
 MCD_RED = "#DA291C"
+MCD_DARK_RED = "#a8001a"  # 深红表头
 MCD_GOLD = "#FFC72C"
 MCD_GREEN = "#00A04A"
 MCD_YELLOW = "#FF9500"
-MCD_BG = "#FAFAFA"
-MCD_CARD_BG = "#FFFFFF"
-MCD_TEXT = "#1a1a1a"
-MCD_TEXT_SUB = "#666666"
+
+# 暖色纸质主题（参考 ITO Traffic Operating Framework）
+THEME_BG = "#f4efe6"        # 页面背景
+THEME_PAPER = "#fffdf8"     # 卡片/表格背景
+THEME_INK = "#2b2620"       # 主文字
+THEME_INK2 = "#5a5048"      # 副文字
+THEME_LINE = "#e4d9bf"      # 边框线
+THEME_ROW_ALT = "#fcfaf3"   # 交替行背景
+
+# 兼容旧名
+MCD_BG = THEME_BG
+MCD_CARD_BG = THEME_PAPER
+MCD_TEXT = THEME_INK
+MCD_TEXT_SUB = THEME_INK2
 MCD_TEXT_MUTED = "#999999"
-MCD_BORDER = "#E8E8E8"
+MCD_BORDER = THEME_LINE
 
 # ─── 状态阈值 ──────────────────────────────────────────────────
 # 绿 = 达成 / 黄 = 落后 5-15% / 红 = 落后 15%+
