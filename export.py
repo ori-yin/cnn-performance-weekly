@@ -323,21 +323,8 @@ def _render_kpi_row(cards_html: list) -> str:
 
 
 def _fig_to_html(fig) -> str:
-    """将 Plotly 图表转为 HTML 片段，禁用数值缩写"""
-    import plotly.graph_objects as go
-    # 创建副本避免修改原图
-    fig_copy = go.Figure(fig)
-    # 更新布局，禁用数值缩写
-    fig_copy.update_layout(
-        yaxis=dict(tickformat=",d", separatethousands=True),
-        xaxis=dict(tickformat=""),
-        hovermode="x unified",
-    )
-    # 更新所有 trace 的 hovertemplate
-    for trace in fig_copy.data:
-        if hasattr(trace, 'y') and trace.y is not None:
-            trace.hovertemplate = "%{y:,}<extra></extra>"
-    return fig_copy.to_html(include_plotlyjs=False, full_html=False)
+    """将 Plotly 图表转为 HTML 片段"""
+    return fig.to_html(include_plotlyjs=False, full_html=False)
 
 
 def _render_section(num: int, title: str, content: str) -> str:

@@ -191,5 +191,10 @@ def render(df: pd.DataFrame):
         showlegend=False, font=dict(family="'PingFang SC', 'Microsoft YaHei', sans-serif"),
     )
 
-    figs = [fig_reach, fig_click]
+    # 创建副本避免 Streamlit 修改
+    import copy
+    fig_reach_copy = copy.deepcopy(fig_reach)
+    fig_click_copy = copy.deepcopy(fig_click)
+
+    figs = [fig_reach_copy, fig_click_copy]
     return figs, bu_table_html

@@ -179,7 +179,11 @@ def render(df: pd.DataFrame, target: int):
 
     st.plotly_chart(fig2, use_container_width=True)
 
-    # ─── 返回数据供导出 ──────────────────────────────────
+    # ─── 返回数据供导出（创建副本避免 Streamlit 修改）─────────
+    import copy
+    fig_copy = copy.deepcopy(fig)
+    fig2_copy = copy.deepcopy(fig2)
+
     kpis = {
         "avg_dau": round(avg_dau),
         "achievement_rate": round(achievement_rate, 1),
@@ -189,5 +193,5 @@ def render(df: pd.DataFrame, target: int):
         "total_sales": total_sales,
         "status": status_actual,
     }
-    figs = [fig, fig2]
+    figs = [fig_copy, fig2_copy]
     return figs, kpis
