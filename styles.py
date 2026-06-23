@@ -53,11 +53,18 @@ def get_css() -> str:
   [data-testid="stSidebar"] .stSelectbox > div > div,
   [data-testid="stSidebar"] .stTextInput > div > div,
   [data-testid="stSidebar"] .stNumberInput > div > div,
-  [data-testid="stSidebar"] .stDateInput > div > div {{
+  [data-testid="stSidebar"] .stDateInput > div > div,
+  [data-testid="stSidebar"] .stFileUploader > div {{
     background: #FFFFFF !important;
-    border: 1px solid #E0E0E0 !important;
+    border: 1.5px solid #CCCCCC !important;
     border-radius: 6px !important;
     color: #1a1a1a !important;
+  }}
+
+  [data-testid="stSidebar"] .stFileUploader {{
+    border: 1.5px solid #CCCCCC !important;
+    border-radius: 6px !important;
+    padding: 8px !important;
   }}
 
   /* ─── Sidebar multiselect 样式 ─── */

@@ -29,14 +29,6 @@ st.markdown(get_css(), unsafe_allow_html=True)
 
 # ─── 侧边栏 ──────────────────────────────────────────────
 with st.sidebar:
-    st.markdown(
-        f'<div style="font-size:20px;font-weight:800;color:{MCD_RED};margin-bottom:4px;">CNN Performance Weekly</div>'
-        f'<div style="font-size:12px;color:#999;margin-bottom:20px;">周度数据复盘看板</div>',
-        unsafe_allow_html=True,
-    )
-
-    st.markdown("---")
-
     # 文件上传
     uploaded_file = st.file_uploader(
         "上传数据文件",
@@ -165,15 +157,6 @@ if filter_owner:
 
 # ─── 计算综合评分 ──────────────────────────────────────
 df = compute_scores(df)
-
-# ─── 页面标题 ──────────────────────────────────────────────
-st.markdown(
-    f'<div style="font-size:28px;font-weight:800;color:#1a1a1a;margin-bottom:4px;">'
-    f'CNN Performance Weekly</div>'
-    f'<div style="font-size:13px;color:#999;margin-bottom:24px;">'
-    f'周度数据复盘 · 聚焦 Operational</div>',
-    unsafe_allow_html=True,
-)
 
 # ─── 加载 Tab 模块 ──────────────────────────────────────
 from tabs.tab_summary import render as render_summary
