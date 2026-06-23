@@ -138,7 +138,7 @@ def main():
 
     st.markdown('<hr class="divider">', unsafe_allow_html=True)
     st.markdown('<div id="sec-bu"></div>', unsafe_allow_html=True)
-    render_bu(df, target_dau)
+    render_bu(df)
 
     st.markdown('<hr class="divider">', unsafe_allow_html=True)
     st.markdown('<div id="sec-plan"></div>', unsafe_allow_html=True)
