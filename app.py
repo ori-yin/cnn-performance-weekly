@@ -195,11 +195,11 @@ def main():
 
     st.markdown('<hr class="divider">', unsafe_allow_html=True)
     st.markdown('<div id="sec-bu"></div>', unsafe_allow_html=True)
-    bu_figs = render_bu(df)
+    bu_figs, bu_table_html = render_bu(df)
 
     st.markdown('<hr class="divider">', unsafe_allow_html=True)
     st.markdown('<div id="sec-plan"></div>', unsafe_allow_html=True)
-    render_plan(df)
+    plan_html = render_plan(df)
 
     # ─── 导出 HTML 按钮 ──────────────────────────────────────
     from export import generate_html
@@ -217,7 +217,10 @@ def main():
             "summary": summary_kpis,
             "operational": op_kpis,
         }
-        tables = {}  # Plan 的表格在 export.py 中单独处理
+        tables = {
+            "bu": bu_table_html,
+            "plan": plan_html,
+        }
 
         html_content = generate_html(df, target_dau, figs, tables, kpis)
         today_str = date.today().strftime("%Y%m%d")

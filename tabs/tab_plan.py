@@ -106,6 +106,59 @@ def _render_plan_card(row: pd.Series, rank: int, is_good: bool):
     )
 
 
+def _generate_plan_card_html(row: pd.Series, rank: int, is_good: bool) -> str:
+    """生成单个 Plan 卡片的 HTML（供导出用）"""
+    border_color = MCD_GREEN if is_good else MCD_RED
+    tag = "Top" if is_good else "Bottom"
+    tag_color = MCD_GREEN if is_good else MCD_RED
+
+    score = row.get("综合评分", 0)
+    score_color = MCD_GREEN if score >= 75 else (MCD_GOLD if score >= 60 else MCD_RED)
+
+    plan_name = str(row.get("Plan名称", "—"))
+    if len(plan_name) > 50:
+        plan_name = plan_name[:50] + "..."
+
+    msg_title = str(row.get("消息标题", "")).strip()
+    msg_text = str(row.get("消息内容", "")).strip()
+
+    msg_html = ""
+    if msg_title or msg_text:
+        msg_html = (
+            f'<div style="margin-top:8px;padding:8px 10px;background:#FAFAFA;border-radius:6px;'
+            f'border-left:2px solid #E0E0E0;font-size:12px;line-height:1.5;">'
+        )
+        if msg_title:
+            msg_html += f'<div style="font-weight:600;color:#1a1a1a;margin-bottom:2px;">{msg_title}</div>'
+        if msg_text:
+            display_text = msg_text[:100] + "..." if len(msg_text) > 100 else msg_text
+            msg_html += f'<div style="color:#666;">{display_text}</div>'
+        msg_html += '</div>'
+
+    return (
+        f'<div style="background:#fff;border:1px solid #E8E8E8;border-left:3px solid {border_color};'
+        f'border-radius:8px;padding:12px 16px;margin-bottom:8px;">'
+        f'<div style="display:flex;justify-content:space-between;align-items:center;">'
+        f'<div>'
+        f'<span style="font-size:11px;font-weight:600;color:{tag_color};">{tag} {rank}</span>'
+        f'<span style="font-size:11px;color:#999;margin-left:8px;">{row.get("Plan ID", "")}</span>'
+        f'</div>'
+        f'<div style="font-size:18px;font-weight:800;color:{score_color};">{score:.0f}</div>'
+        f'</div>'
+        f'<div style="font-size:13px;font-weight:600;margin:6px 0 2px;">{plan_name}</div>'
+        f'<div style="font-size:12px;color:#666;">'
+        f'BU: {row.get("预算owner", "—")} · '
+        f'触达 {int(row.get("触达成功", 0)):,} · '
+        f'点击 {int(row.get("点击人次", 0)):,} · '
+        f'CTR {row.get("CTR", 0):.2f}% · '
+        f'GC率 {row.get("GC转化率", 0):.1f}% · '
+        f'Sales {row.get("订单Sales", 0):,.2f}'
+        f'</div>'
+        f'{msg_html}'
+        f'</div>'
+    )
+
+
 def render(df: pd.DataFrame):
     """渲染 Plan 分析层"""
 
@@ -184,3 +237,56 @@ def render(df: pd.DataFrame):
 
     if not has_data:
         st.info("当前筛选条件下没有足够的 Plan 数据进行分析")
+
+    # ─── 生成 Plan HTML 供导出 ──────────────────────────────
+    plan_html = ""
+    for ch in CHANNELS:
+        ch_df = df[df["渠道"] == ch].copy()
+        if len(ch_df) < 2:
+            continue
+
+        agg_dict = {
+            "Plan名称": "first",
+            "预算owner": "first",
+            "触达成功": "sum",
+            "点击人次": "sum",
+            "订单GC": "sum",
+            "综合评分": "mean",
+            "CTR": "mean",
+            "GC转化率": "mean",
+            "消息标题": "first",
+            "消息内容": "first",
+        }
+        if "订单Sales" in ch_df.columns:
+            agg_dict["订单Sales"] = "sum"
+
+        plan_agg = ch_df.groupby("Plan ID").agg(agg_dict).reset_index()
+        plan_agg = plan_agg[plan_agg["触达成功"] > 0]
+
+        if len(plan_agg) < 2:
+            continue
+
+        plan_agg = plan_agg.sort_values("综合评分", ascending=False).reset_index(drop=True)
+        top3 = plan_agg.head(3)
+        bottom3 = plan_agg.tail(3).iloc[::-1]
+
+        plan_html += f'<div class="section-subheader">{ch}</div>'
+        plan_html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">'
+
+        # Top 3
+        plan_html += '<div>'
+        plan_html += f'<div style="font-size:13px;font-weight:600;color:{MCD_GREEN};margin-bottom:8px;">Top 3 Good Case</div>'
+        for i, (_, row) in enumerate(top3.iterrows(), 1):
+            plan_html += _generate_plan_card_html(row, i, is_good=True)
+        plan_html += '</div>'
+
+        # Bottom 3
+        plan_html += '<div>'
+        plan_html += f'<div style="font-size:13px;font-weight:600;color:{MCD_RED};margin-bottom:8px;">Bottom 3 Bad Case</div>'
+        for i, (_, row) in enumerate(bottom3.iterrows(), 1):
+            plan_html += _generate_plan_card_html(row, i, is_good=False)
+        plan_html += '</div>'
+
+        plan_html += '</div>'
+
+    return plan_html

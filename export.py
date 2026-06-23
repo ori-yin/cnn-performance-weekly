@@ -323,7 +323,12 @@ def _render_kpi_row(cards_html: list) -> str:
 
 
 def _fig_to_html(fig) -> str:
-    """将 Plotly 图表转为 HTML 片段"""
+    """将 Plotly 图表转为 HTML 片段，禁用数值缩写"""
+    # 更新布局，禁用数值缩写
+    fig.update_layout(
+        yaxis=dict(tickformat=","),
+        xaxis=dict(tickformat=""),
+    )
     return fig.to_html(include_plotlyjs=False, full_html=False)
 
 

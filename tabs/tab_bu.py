@@ -123,6 +123,43 @@ def render(df: pd.DataFrame):
 
     st.plotly_chart(fig, use_container_width=True)
 
+    # ─── 生成 BU 表格 HTML 供导出 ──────────────────────────
+    TH = "background:#a8001a;color:#fff;padding:9px 11px;font-weight:700;font-size:11.5px;"
+    TD = "padding:8px 11px;border-bottom:1px solid #f0e8d6;"
+    TD_EVEN = "padding:8px 11px;border-bottom:1px solid #f0e8d6;background:#fcfaf3;"
+
+    bu_table_rows = ""
+    for i, (_, row) in enumerate(bu_df.iterrows()):
+        td_style = TD_EVEN if i % 2 == 1 else TD
+        bu_table_rows += (
+            f"<tr>"
+            f"<td style='{td_style}font-weight:600;'>{row['BU']}</td>"
+            f"<td style='{td_style}text-align:right;'>{row['Plan数']}</td>"
+            f"<td style='{td_style}text-align:right;'>{row['触达成功']:,}</td>"
+            f"<td style='{td_style}text-align:right;'>{row['点击人次']:,}</td>"
+            f"<td style='{td_style}text-align:right;'>{row['CTR']:.2f}%</td>"
+            f"<td style='{td_style}text-align:right;'>{row['订单GC']:,}</td>"
+            f"<td style='{td_style}text-align:right;'>{row['GC转化率']:.1f}%</td>"
+            f"<td style='{td_style}text-align:right;'>{row['订单Sales']:,.2f}</td>"
+            f"</tr>"
+        )
+
+    bu_table_html = (
+        f'<table style="width:100%;border-collapse:collapse;font-size:13px;background:#fffdf8;border-radius:9px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);">'
+        f'<thead><tr>'
+        f'<th style="{TH}text-align:left;">BU</th>'
+        f'<th style="{TH}text-align:right;">Plan数</th>'
+        f'<th style="{TH}text-align:right;">触达成功</th>'
+        f'<th style="{TH}text-align:right;">点击人次</th>'
+        f'<th style="{TH}text-align:right;">CTR</th>'
+        f'<th style="{TH}text-align:right;">订单GC</th>'
+        f'<th style="{TH}text-align:right;">GC转化率</th>'
+        f'<th style="{TH}text-align:right;">订单Sales</th>'
+        f'</tr></thead>'
+        f'<tbody>{bu_table_rows}</tbody>'
+        f'</table>'
+    )
+
     # ─── 返回数据供导出（两个指标的图都生成）─────────────────
     fig_reach = go.Figure()
     fig_reach.add_trace(go.Bar(
@@ -155,4 +192,4 @@ def render(df: pd.DataFrame):
     )
 
     figs = [fig_reach, fig_click]
-    return figs
+    return figs, bu_table_html
