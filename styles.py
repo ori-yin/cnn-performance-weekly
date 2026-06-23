@@ -224,14 +224,10 @@ def get_css() -> str:
     align-items: center;
     gap: 14px;
   }}
-  .topbar-logo {{
-    font-size: 34px;
-    font-weight: 900;
-    color: #FFBC0D;
-    font-style: italic;
-    letter-spacing: -3px;
-    line-height: 1;
-    text-shadow: 1px 2px 4px rgba(0,0,0,.3);
+  .topbar-logo-img {{
+    height: 40px;
+    width: auto;
+    filter: brightness(0) invert(1);
   }}
   .topbar-title h1 {{
     font-size: 17px;

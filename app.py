@@ -20,7 +20,7 @@ def render_topbar(today_str: str):
     st.markdown(f"""
     <div class="topbar">
       <div class="topbar-left">
-        <div class="topbar-logo">M</div>
+        <img src="mcdonalds.png" class="topbar-logo-img" alt="McDonald's">
         <div class="topbar-title">
           <h1>Performance Review</h1>
           <div class="sub">周度数据复盘看板</div>
