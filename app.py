@@ -43,6 +43,23 @@ def render_nav():
       <a class="nav-link" href="#sec-bu">BU Analysis</a>
       <a class="nav-link" href="#sec-plan">Plan Analysis</a>
     </div>
+    <script>
+    // 确保 sticky 定位生效
+    document.addEventListener('DOMContentLoaded', function() {
+      var topbar = document.querySelector('.topbar');
+      var navBar = document.querySelector('.nav-bar');
+      if (topbar) {
+        topbar.style.position = 'sticky';
+        topbar.style.top = '0';
+        topbar.style.zIndex = '100';
+      }
+      if (navBar) {
+        navBar.style.position = 'sticky';
+        navBar.style.top = '57px';
+        navBar.style.zIndex = '90';
+      }
+    });
+    </script>
     """, unsafe_allow_html=True)
 
 

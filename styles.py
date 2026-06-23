@@ -208,11 +208,11 @@ def get_css() -> str:
     justify-content: space-between;
     padding: 10px 26px;
     box-shadow: 0 2px 14px rgba(0,0,0,.18);
-    position: fixed;
+    position: -webkit-sticky;
+    position: sticky;
     top: 0;
-    left: 0;
-    right: 0;
     z-index: 100;
+    margin: -1.5rem -1rem 0 -1rem;
   }}
   .topbar-left {{
     display: flex;
@@ -259,10 +259,9 @@ def get_css() -> str:
 
   /* ─── 导航栏（锚点链接，参考 ITO）────────────────────────────── */
   .nav-bar {{
-    position: fixed;
+    position: -webkit-sticky;
+    position: sticky;
     top: 57px;
-    left: 0;
-    right: 0;
     z-index: 90;
     background: rgba(255,253,248,.96);
     backdrop-filter: blur(6px);
@@ -271,6 +270,7 @@ def get_css() -> str:
     flex-wrap: wrap;
     gap: 4px;
     padding: 8px 20px;
+    margin: 0 -1rem 1rem -1rem;
   }}
   .nav-bar a.nav-link,
   .nav-bar a.nav-link:link,
@@ -295,7 +295,7 @@ def get_css() -> str:
 
   /* ─── 紧凑间距 ─── */
   .block-container {{
-    padding-top: 100px !important;
+    padding-top: 0 !important;
     padding-bottom: 1rem !important;
   }}
   [data-testid="stVerticalBlock"] > div {{
@@ -303,14 +303,6 @@ def get_css() -> str:
   }}
   [data-testid="stHorizontalBlock"] {{
     gap: 0.4rem !important;
-  }}
-
-  /* ─── 确保 sticky 定位生效 ─── */
-  .stApp {{
-    overflow: visible !important;
-  }}
-  [data-testid="stAppViewContainer"] {{
-    overflow: visible !important;
   }}
 
   /* ─── 调整 Streamlit 默认 header（保留侧边栏切换按钮）─── */
