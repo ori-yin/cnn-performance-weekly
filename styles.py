@@ -253,35 +253,33 @@ def get_css() -> str:
     margin-bottom: 3px;
   }}
 
-  /* ─── 导航栏按钮 ─── */
-  div[data-testid="stHorizontalBlock"] > div[data-testid="stVerticalBlock"] {{
+  /* ─── 导航栏（锚点链接）────────────────────────────────────── */
+  .nav-bar {{
+    position: sticky;
+    top: 57px;
+    z-index: 90;
     background: rgba(255,253,248,.96);
+    backdrop-filter: blur(6px);
     border-bottom: 1px solid #e4d9bf;
-    padding: 4px 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 8px 20px;
+    margin: 0 -1rem 1rem -1rem;
   }}
-  div[data-testid="stHorizontalBlock"] button[kind="secondary"] {{
-    background: transparent !important;
-    color: #5a5048 !important;
-    border: none !important;
-    border-radius: 16px !important;
-    font-size: 12px !important;
-    font-weight: 700 !important;
-    padding: 4px 11px !important;
+  .nav-link {{
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #5a5048;
+    padding: 4px 11px;
+    border-radius: 16px;
+    text-decoration: none;
+    transition: .15s;
     white-space: nowrap;
   }}
-  div[data-testid="stHorizontalBlock"] button[kind="secondary"]:hover {{
-    background: #fde9ea !important;
-    color: #DA291C !important;
-  }}
-  div[data-testid="stHorizontalBlock"] button[kind="primary"] {{
-    background: #DA291C !important;
-    color: #fff !important;
-    border: none !important;
-    border-radius: 16px !important;
-    font-size: 12px !important;
-    font-weight: 700 !important;
-    padding: 4px 11px !important;
-    white-space: nowrap;
+  .nav-link:hover {{
+    background: #fde9ea;
+    color: #DA291C;
   }}
 
   /* ─── 紧凑间距 ─── */
