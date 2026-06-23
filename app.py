@@ -18,7 +18,7 @@ from styles import get_css
 # ─── 页面配置 ──────────────────────────────────────────────
 st.set_page_config(
     page_title="Performance Review",
-    page_icon="🍔",
+    page_icon="favicon.png",
     layout="wide",
     initial_sidebar_state="expanded",
 )
