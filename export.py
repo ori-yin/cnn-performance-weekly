@@ -46,7 +46,7 @@ def _get_css() -> str:
     box-shadow: 0 2px 14px rgba(0,0,0,.18);
   }
   .topbar-left { display: flex; align-items: center; gap: 14px; }
-  .topbar-logo { height: 40px; width: auto; filter: brightness(0) invert(1); }
+  .topbar-logo { height: 40px; width: auto; }
   .topbar-title h1 { font-size: 17px; font-weight: 800; color: #fff; letter-spacing: .3px; }
   .topbar-title .sub { font-size: 11px; color: rgba(255,255,255,.85); margin-top: 1px; }
   .topbar-right { text-align: right; color: rgba(255,255,255,.92); font-size: 10.5px; line-height: 1.6; }
@@ -324,12 +324,20 @@ def _render_kpi_row(cards_html: list) -> str:
 
 def _fig_to_html(fig) -> str:
     """将 Plotly 图表转为 HTML 片段，禁用数值缩写"""
+    import plotly.graph_objects as go
+    # 创建副本避免修改原图
+    fig_copy = go.Figure(fig)
     # 更新布局，禁用数值缩写
-    fig.update_layout(
-        yaxis=dict(tickformat=","),
+    fig_copy.update_layout(
+        yaxis=dict(tickformat=",d", separatethousands=True),
         xaxis=dict(tickformat=""),
+        hovermode="x unified",
     )
-    return fig.to_html(include_plotlyjs=False, full_html=False)
+    # 更新所有 trace 的 hovertemplate
+    for trace in fig_copy.data:
+        if hasattr(trace, 'y') and trace.y is not None:
+            trace.hovertemplate = "%{y:,}<extra></extra>"
+    return fig_copy.to_html(include_plotlyjs=False, full_html=False)
 
 
 def _render_section(num: int, title: str, content: str) -> str:
