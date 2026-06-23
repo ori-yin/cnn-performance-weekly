@@ -196,9 +196,97 @@ def get_css() -> str:
     margin: 28px 0;
   }}
 
+  /* ─── 顶部栏（Topbar）────────────────────────────────────────── */
+  .topbar {{
+    background: linear-gradient(135deg, #DB0007, #a8001a);
+    border-bottom: 3px solid #FFBC0D;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 26px;
+    box-shadow: 0 2px 14px rgba(0,0,0,.18);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    margin: -1.5rem -1rem 0 -1rem;
+  }}
+  .topbar-left {{
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }}
+  .topbar-logo {{
+    font-size: 34px;
+    font-weight: 900;
+    color: #FFBC0D;
+    font-style: italic;
+    letter-spacing: -3px;
+    line-height: 1;
+    text-shadow: 1px 2px 4px rgba(0,0,0,.3);
+  }}
+  .topbar-title h1 {{
+    font-size: 17px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: .3px;
+    margin: 0;
+  }}
+  .topbar-title .sub {{
+    font-size: 11px;
+    color: rgba(255,255,255,.85);
+    margin-top: 1px;
+  }}
+  .topbar-right {{
+    text-align: right;
+    color: rgba(255,255,255,.92);
+    font-size: 10.5px;
+    line-height: 1.6;
+  }}
+  .topbar-badge {{
+    display: inline-block;
+    background: #FFBC0D;
+    color: #5a1a00;
+    font-weight: 800;
+    font-size: 10.5px;
+    padding: 2px 11px;
+    border-radius: 20px;
+    margin-bottom: 3px;
+  }}
+
+  /* ─── 导航栏按钮 ─── */
+  div[data-testid="stHorizontalBlock"] > div[data-testid="stVerticalBlock"] {{
+    background: rgba(255,253,248,.96);
+    border-bottom: 1px solid #e4d9bf;
+    padding: 4px 0;
+  }}
+  div[data-testid="stHorizontalBlock"] button[kind="secondary"] {{
+    background: transparent !important;
+    color: #5a5048 !important;
+    border: none !important;
+    border-radius: 16px !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    padding: 4px 11px !important;
+    white-space: nowrap;
+  }}
+  div[data-testid="stHorizontalBlock"] button[kind="secondary"]:hover {{
+    background: #fde9ea !important;
+    color: #DA291C !important;
+  }}
+  div[data-testid="stHorizontalBlock"] button[kind="primary"] {{
+    background: #DA291C !important;
+    color: #fff !important;
+    border: none !important;
+    border-radius: 16px !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    padding: 4px 11px !important;
+    white-space: nowrap;
+  }}
+
   /* ─── 紧凑间距 ─── */
   .block-container {{
-    padding-top: 1.5rem !important;
+    padding-top: 0 !important;
     padding-bottom: 1rem !important;
   }}
   [data-testid="stVerticalBlock"] > div {{
@@ -206,6 +294,11 @@ def get_css() -> str:
   }}
   [data-testid="stHorizontalBlock"] {{
     gap: 0.4rem !important;
+  }}
+
+  /* ─── 隐藏 Streamlit 默认 header ─── */
+  header[data-testid="stHeader"] {{
+    display: none;
   }}
 
   /* ─── 隐藏 Streamlit footer ─── */

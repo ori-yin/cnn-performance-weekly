@@ -1,180 +1,177 @@
 """
-app.py - CNN Performance Weekly：Streamlit 主入口
+app.py - CNN Performance Weekly 主入口
 """
 
-import sys
-import os
 import streamlit as st
-import pandas as pd
+from datetime import date, timedelta
+import urllib.parse
 
-# 确保项目根目录在 path 中
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
-from config import MCD_RED, MCD_GOLD, CHANNELS
+from config import MCD_RED, MCD_GOLD
 from data import read_data, filter_week_data
-from scoring import compute_scores
 from styles import get_css
-
-# ─── 页面配置 ──────────────────────────────────────────────
-st.set_page_config(
-    page_title="Performance Review",
-    page_icon="favicon.png",
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
-
-# 注入全局 CSS
-st.markdown(get_css(), unsafe_allow_html=True)
-
-
-# ─── 侧边栏 ──────────────────────────────────────────────
-with st.sidebar:
-    # 文件上传
-    uploaded_file = st.file_uploader(
-        "上传数据文件",
-        type=["csv", "xlsx"],
-        help="支持 CSV / XLSX 格式",
-    )
-
-    # Target 输入
-    target_dau = st.number_input(
-        "DAU Target（日均）",
-        min_value=0,
-        value=0,
-        step=1000,
-        help="输入日均 DAU 目标值（点击人次）",
-    )
-
-    st.markdown("---")
-
-    # 筛选器（数据加载后显示）
-    filter_channel = None
-    filter_plan_type = None
-    filter_owner = None
-    filter_date_range = None
-
-    if uploaded_file is not None:
-        st.markdown(
-            '<div style="font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:12px;'
-            'padding-bottom:6px;border-bottom:2px solid #DA291C;">筛选条件</div>',
-            unsafe_allow_html=True,
-        )
-
-        # 读取数据（缓存）
-        @st.cache_data
-        def load_data(file_bytes, file_name):
-            """缓存数据读取"""
-            import io
-            fake_file = io.BytesIO(file_bytes)
-            fake_file.name = file_name
-            return read_data(fake_file)
-
-        try:
-            df_all = load_data(uploaded_file.getvalue(), uploaded_file.name)
-
-            # 日期筛选
-            valid_dates = df_all["发送日期"].dropna()
-            if len(valid_dates) > 0:
-                min_date = valid_dates.min().date()
-                max_date = valid_dates.max().date()
-
-                st.markdown(
-                    '<div style="font-size:11px;font-weight:600;color:#888;'
-                    'margin-bottom:4px;letter-spacing:0.05em;">日期范围</div>',
-                    unsafe_allow_html=True,
-                )
-
-                col1, col2 = st.columns(2)
-                with col1:
-                    date_start = st.date_input("开始", value=min_date, min_value=min_date, max_value=max_date)
-                with col2:
-                    date_end = st.date_input("结束", value=max_date, min_value=min_date, max_value=max_date)
-
-                filter_date_range = (pd.Timestamp(date_start), pd.Timestamp(date_end))
-
-            st.markdown('<div style="height:8px;"></div>', unsafe_allow_html=True)
-
-            # 渠道筛选
-            available_channels = sorted(df_all["渠道"].dropna().unique().tolist())
-            filter_channel = st.multiselect(
-                "渠道",
-                options=available_channels,
-                default=available_channels,
-            )
-
-            # 计划类型筛选
-            available_types = sorted(df_all["计划类型"].dropna().unique().tolist())
-            filter_plan_type = st.multiselect(
-                "计划类型",
-                options=available_types,
-                default=available_types,
-            )
-
-            # BU 筛选
-            available_owners = sorted(df_all["预算owner"].dropna().unique().tolist())
-            filter_owner = st.multiselect(
-                "BU（预算owner）",
-                options=available_owners,
-                default=available_owners,
-            )
-
-        except Exception as e:
-            st.error(f"数据读取失败: {e}")
-            df_all = None
-    else:
-        df_all = None
-
-
-# ─── 主区域 ──────────────────────────────────────────────
-if df_all is None:
-    # 未上传文件时的引导页
-    st.markdown(
-        f"""
-        <div style="text-align:center;padding:120px 40px;">
-            <div style="font-size:48px;margin-bottom:16px;">📊</div>
-            <div style="font-size:24px;font-weight:700;color:#1a1a1a;margin-bottom:8px;">
-                CNN Performance Weekly
-            </div>
-            <div style="font-size:14px;color:#999;">
-                请在左侧上传数据文件（CSV / XLSX），并输入 DAU Target
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-    st.stop()
-
-# ─── 应用筛选 ──────────────────────────────────────────────
-df = df_all.copy()
-if filter_date_range:
-    df = df[(df["发送日期"] >= filter_date_range[0]) & (df["发送日期"] <= filter_date_range[1])]
-if filter_channel:
-    df = df[df["渠道"].isin(filter_channel)]
-if filter_plan_type:
-    df = df[df["计划类型"].isin(filter_plan_type)]
-if filter_owner:
-    df = df[df["预算owner"].isin(filter_owner)]
-
-# ─── 计算综合评分 ──────────────────────────────────────
-df = compute_scores(df)
-
-# ─── 加载 Tab 模块 ──────────────────────────────────────
 from tabs.tab_summary import render as render_summary
 from tabs.tab_operational import render as render_operational
 from tabs.tab_bu import render as render_bu
 from tabs.tab_plan import render as render_plan
 
-# ─── 渲染各层 ──────────────────────────────────────────────
-render_summary(df, target_dau)
 
-st.markdown('<hr class="divider">', unsafe_allow_html=True)
+def render_topbar(today_str: str):
+    """渲染顶部栏"""
+    st.markdown(f"""
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-logo">M</div>
+        <div class="topbar-title">
+          <h1>Performance Review</h1>
+          <div class="sub">周度数据复盘看板</div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <span class="topbar-badge">Weekly Report</span><br>
+        {today_str} &nbsp; McDonald's China &middot; IT Operating &middot; Traffic
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
 
-render_operational(df, target_dau)
 
-st.markdown('<hr class="divider">', unsafe_allow_html=True)
+def render_nav(active_tab: str):
+    """渲染导航栏（用 st.radio 实现真实切换）"""
+    tabs = {
+        "summary": "Executive Summary",
+        "operational": "Operational Analysis",
+        "bu": "BU Analysis",
+        "plan": "Plan Analysis",
+    }
+    # 用 radio 实现，但用 CSS 隐藏原生样式，用自定义 HTML 模拟按钮
+    cols = st.columns(len(tabs))
+    selected = active_tab
+    for i, (key, label) in enumerate(tabs.items()):
+        with cols[i]:
+            if st.button(
+                label,
+                key=f"nav_{key}",
+                use_container_width=True,
+                type="primary" if key == active_tab else "secondary",
+            ):
+                selected = key
+    return selected
 
-render_bu(df)
 
-st.markdown('<hr class="divider">', unsafe_allow_html=True)
+def main():
+    st.set_page_config(
+        page_title="Performance Review",
+        page_icon="favicon.png",
+        layout="wide",
+        initial_sidebar_state="expanded",
+    )
 
-render_plan(df)
+    # 隐藏 Streamlit 默认 header（brand mark + hamburger）
+    st.markdown(get_css(), unsafe_allow_html=True)
+
+    # ─── 顶部栏 ─────────────────────────────────────────
+    today_str = date.today().strftime("%Y-%m-%d")
+    render_topbar(today_str)
+
+    # ─── 导航栏 ─────────────────────────────────────────
+    # 用 query params 或 session state 追踪当前 tab
+    if "active_tab" not in st.session_state:
+        st.session_state.active_tab = "summary"
+
+    # 检查 URL query params
+    query_params = st.query_params
+    if "tab" in query_params:
+        tab_val = query_params["tab"]
+        if tab_val in ["summary", "operational", "bu", "plan"]:
+            st.session_state.active_tab = tab_val
+
+    active_tab = render_nav(st.session_state.active_tab)
+    if active_tab != st.session_state.active_tab:
+        st.session_state.active_tab = active_tab
+        st.query_params["tab"] = active_tab
+        st.rerun()
+
+    # ─── 侧边栏 ─────────────────────────────────────────
+    with st.sidebar:
+        st.markdown("### 数据设置")
+        uploaded = st.file_uploader(
+            "上传 Excel / CSV",
+            type=["xlsx", "xls", "csv"],
+            help="拖入 CNN 周报数据文件",
+        )
+
+        st.markdown("---")
+        target_dau = st.number_input(
+            "Target DAU（日均）",
+            min_value=0,
+            value=1000,
+            step=100,
+            help="本周每日目标触达人次",
+        )
+
+        # ── 日期范围 ──
+        st.markdown("---")
+        st.markdown("##### 日期范围")
+        today = date.today()
+        default_start = today - timedelta(days=today.weekday() + 7)  # 上周一
+        default_end = default_start + timedelta(days=6)               # 上周日
+        start_date = st.date_input("开始日期", value=default_start)
+        end_date = st.date_input("结束日期", value=default_end)
+
+        # ── 维度筛选 ──
+        st.markdown("---")
+        st.markdown("##### 维度筛选")
+
+    # ─── 数据读取 ─────────────────────────────────────────
+    if uploaded is not None:
+        raw_df = read_data(uploaded)
+    else:
+        st.info("请在左侧上传 Excel 或 CSV 数据文件")
+        return
+
+    if raw_df is None or raw_df.empty:
+        st.error("数据文件读取失败或为空")
+        return
+
+    # 日期筛选
+    df = filter_week_data(raw_df, start_date, end_date)
+    if df.empty:
+        st.warning(f"所选日期范围 [{start_date} ~ {end_date}] 内无数据")
+        return
+
+    # Sidebar 维度筛选（需数据加载后才有选项）
+    with st.sidebar:
+        channels = sorted(df["渠道"].dropna().unique().tolist()) if "渠道" in df.columns else []
+        plan_types = sorted(df["计划类型"].dropna().unique().tolist()) if "计划类型" in df.columns else []
+        bus = sorted(df["预算owner"].dropna().unique().tolist()) if "预算owner" in df.columns else []
+
+        selected_channels = st.multiselect("渠道", channels, default=channels)
+        selected_plan_types = st.multiselect("计划类型", plan_types, default=plan_types)
+        selected_bus = st.multiselect("预算 Owner (BU)", bus, default=bus)
+
+    # 应用筛选
+    if selected_channels:
+        df = df[df["渠道"].isin(selected_channels)]
+    if selected_plan_types:
+        df = df[df["计划类型"].isin(selected_plan_types)]
+    if selected_bus:
+        df = df[df["预算owner"].isin(selected_bus)]
+
+    if df.empty:
+        st.warning("筛选后无数据，请调整筛选条件")
+        return
+
+    # ─── 主体内容 ─────────────────────────────────────────
+    tab = st.session_state.active_tab
+
+    if tab == "summary":
+        render_summary(df, target_dau)
+    elif tab == "operational":
+        render_operational(df, target_dau)
+    elif tab == "bu":
+        render_bu(df, target_dau)
+    elif tab == "plan":
+        render_plan(df)
+
+
+if __name__ == "__main__":
+    main()
