@@ -316,7 +316,7 @@ def main():
             "plan": plan_html,
         }
 
-        html_content = generate_html(df, target_dau, figs, tables, kpis)
+        html_content = generate_html(df, target_dau, figs, tables, kpis, period_str=f"{start_date} ~ {end_date}")
         today_str = date.today().strftime("%Y%m%d")
         st.download_button(
             label="下载 HTML 看板",

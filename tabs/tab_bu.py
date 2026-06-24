@@ -44,6 +44,40 @@ def render(df: pd.DataFrame):
     bu_df = bu_df.sort_values("点击人次", ascending=False).reset_index(drop=True)
     days_count = df["发送日期"].dt.date.nunique()
 
+    # ─── BU 综合评分 ────────────────────────────────────────
+    # 触达归一化（幂律压缩）
+    reach_max = bu_df["触达成功"].max()
+    if reach_max > 0:
+        bu_df["触达_norm"] = (bu_df["触达成功"] / reach_max) ** 0.3 * 100
+    else:
+        bu_df["触达_norm"] = 0
+
+    # CTR 归一化（Q3 阈值）
+    ctr_q3 = bu_df["CTR"].quantile(0.75)
+    if ctr_q3 > 0:
+        bu_df["CTR_norm"] = bu_df["CTR"].apply(lambda x: 100 if x >= ctr_q3 else 100 * (x / ctr_q3) ** 1.5)
+    else:
+        bu_df["CTR_norm"] = 50
+
+    # GC转化率 归一化（Q3 阈值）
+    gc_q3 = bu_df["GC转化率"].quantile(0.75)
+    if gc_q3 > 0:
+        bu_df["GC_norm"] = bu_df["GC转化率"].apply(lambda x: 100 if x >= gc_q3 else 100 * (x / gc_q3) ** 1.5)
+    else:
+        bu_df["GC_norm"] = 50
+
+    # 置信度惩罚
+    def _penalty(reach):
+        if reach < 100: return 0.1
+        if reach < 500: return 0.3
+        if reach < 1000: return 0.5
+        if reach < 5000: return 0.8
+        return 1.0
+
+    bu_df["惩罚"] = bu_df["触达成功"].apply(_penalty)
+    bu_df["评分"] = (bu_df["CTR_norm"] * 0.50 + bu_df["触达_norm"] * 0.25 + bu_df["GC_norm"] * 0.25) * bu_df["惩罚"]
+    bu_df["评分"] = bu_df["评分"].round(1)
+
     # ─── BU 排行榜（4 个榜单横排）──────────────────────────
     st.markdown('<div class="section-subheader">BU 排行榜</div>', unsafe_allow_html=True)
 
@@ -92,6 +126,16 @@ def render(df: pd.DataFrame):
     with c4:
         st.markdown(_rank_html("Sales TOP5", rank_sales, "订单Sales"), unsafe_allow_html=True)
 
+    # 排行榜 HTML（供导出）
+    bu_rank_html = (
+        '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">'
+        + _rank_html("Plan数 TOP5", rank_plan, "Plan数")
+        + _rank_html("触达成功 TOP5", rank_reach, "触达成功")
+        + _rank_html("CTR TOP5", rank_ctr, "CTR", unit="%")
+        + _rank_html("Sales TOP5", rank_sales, "订单Sales")
+        + '</div>'
+    )
+
     # ─── BU 总览表（构建一次，显示+导出共用）─────────────────
     st.markdown('<div class="section-subheader">BU 总览</div>', unsafe_allow_html=True)
 
@@ -113,6 +157,7 @@ def render(df: pd.DataFrame):
             f"<td style='{td_style}text-align:right;'>{int(row['订单GC'] / d):,}</td>"
             f"<td style='{td_style}text-align:right;'>{row['GC转化率']:.1f}%</td>"
             f"<td style='{td_style}text-align:right;'>{row['订单Sales'] / d:,.2f}</td>"
+            f"<td style='{td_style}text-align:right;'>{row['评分']:.1f}</td>"
             f"</tr>"
         )
 
@@ -127,10 +172,11 @@ def render(df: pd.DataFrame):
         f'<th style="{TH}text-align:right;">订单GC（日均）</th>'
         f'<th style="{TH}text-align:right;">GC转化率</th>'
         f'<th style="{TH}text-align:right;">订单Sales（日均）</th>'
+        f'<th style="{TH}text-align:right;">评分</th>'
         f'</tr></thead>'
         f'<tbody>{rows_html}</tbody>'
         f'</table>'
     )
     st.markdown(bu_table_html, unsafe_allow_html=True)
 
-    return [], bu_table_html
+    return [], bu_rank_html + bu_table_html

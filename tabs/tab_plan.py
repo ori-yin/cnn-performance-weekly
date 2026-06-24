@@ -142,6 +142,62 @@ def _ai_inline_html(ai_result: dict = None) -> str:
     )
 
 
+def _aggregate_plans(ch_df: pd.DataFrame) -> pd.DataFrame:
+    """按 Plan 聚合单个渠道的数据"""
+    agg_dict = {
+        "Plan名称": "first",
+        "预算owner": "first",
+        "发送日期": "first",
+        "触达成功": "sum",
+        "点击人次": "sum",
+        "订单GC": "sum",
+        "综合评分": "mean",
+        "CTR": "mean",
+        "GC转化率": "mean",
+        "消息标题": "first",
+        "消息内容": "first",
+    }
+    if "订单Sales" in ch_df.columns:
+        agg_dict["订单Sales"] = "sum"
+    plan_agg = ch_df.groupby("Plan ID").agg(agg_dict).reset_index()
+    plan_agg = plan_agg[plan_agg["触达成功"] > 0]
+    return plan_agg
+
+
+def _render_plan_cards(top6: pd.DataFrame, ch: str, ai_results: dict = None):
+    """Streamlit 渲染 TOP6 卡片（两列）"""
+    col_l, col_r = st.columns(2)
+    rows_list = list(top6.iterrows())
+    with col_l:
+        for i, (_, row) in enumerate(rows_list[:3], 1):
+            ai_key = f"{row['Plan ID']}_{ch}"
+            ai = ai_results.get(ai_key) if ai_results else None
+            st.markdown(_plan_card_html(row, i, is_good=True, ai_result=ai), unsafe_allow_html=True)
+    with col_r:
+        for i, (_, row) in enumerate(rows_list[3:6], 4):
+            ai_key = f"{row['Plan ID']}_{ch}"
+            ai = ai_results.get(ai_key) if ai_results else None
+            st.markdown(_plan_card_html(row, i, is_good=True, ai_result=ai), unsafe_allow_html=True)
+
+
+def _export_plan_cards(top6: pd.DataFrame, ch: str, ai_results: dict = None) -> str:
+    """导出 HTML：TOP6 卡片（两列）"""
+    rows_list = list(top6.iterrows())
+    html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">'
+    html += '<div>'
+    for i, (_, row) in enumerate(rows_list[:3], 1):
+        ai_key = f"{row['Plan ID']}_{ch}"
+        ai = ai_results.get(ai_key) if ai_results else None
+        html += _plan_card_html(row, i, is_good=True, ai_result=ai)
+    html += '</div><div>'
+    for i, (_, row) in enumerate(rows_list[3:6], 4):
+        ai_key = f"{row['Plan ID']}_{ch}"
+        ai = ai_results.get(ai_key) if ai_results else None
+        html += _plan_card_html(row, i, is_good=True, ai_result=ai)
+    html += '</div></div>'
+    return html
+
+
 def render(df: pd.DataFrame, ai_results: dict = None):
     """渲染 Plan 分析层，返回 plan_html 供导出用"""
 
@@ -162,70 +218,53 @@ def render(df: pd.DataFrame, ai_results: dict = None):
         df["消息标题"] = ""
         df["消息内容"] = ""
 
-    has_data = False
-    plan_html = ""
-
+    # 检测可用渠道（至少 2 条 Plan）
+    available_channels = []
     for ch in CHANNELS:
-        ch_df = df[df["渠道"] == ch].copy()
-        if len(ch_df) < 2:
-            continue
+        ch_df = df[df["渠道"] == ch]
+        if len(ch_df) >= 2:
+            plan_agg = _aggregate_plans(ch_df)
+            if len(plan_agg) >= 2:
+                available_channels.append(ch)
 
-        has_data = True
-
-        # 按 Plan 聚合
-        agg_dict = {
-            "Plan名称": "first",
-            "预算owner": "first",
-            "发送日期": "first",
-            "触达成功": "sum",
-            "点击人次": "sum",
-            "订单GC": "sum",
-            "综合评分": "mean",
-            "CTR": "mean",
-            "GC转化率": "mean",
-            "消息标题": "first",
-            "消息内容": "first",
-        }
-        if "订单Sales" in ch_df.columns:
-            agg_dict["订单Sales"] = "sum"
-
-        plan_agg = ch_df.groupby("Plan ID").agg(agg_dict).reset_index()
-        plan_agg = plan_agg[plan_agg["触达成功"] > 0]
-
-        if len(plan_agg) < 2:
-            continue
-
-        plan_agg = plan_agg.sort_values("综合评分", ascending=False).reset_index(drop=True)
-        top6 = plan_agg.head(6)
-
-        # ─── Streamlit 显示（两列：1-3 左，4-6 右）─────────
-        st.markdown(f'<div class="section-subheader">{ch}</div>', unsafe_allow_html=True)
-        col_l, col_r = st.columns(2)
-
-        rows_list = list(top6.iterrows())
-        with col_l:
-            for i, (_, row) in enumerate(rows_list[:3], 1):
-                ai_key = f"{row['Plan ID']}_{ch}"
-                ai = ai_results.get(ai_key) if ai_results else None
-                st.markdown(_plan_card_html(row, i, is_good=True, ai_result=ai), unsafe_allow_html=True)
-        with col_r:
-            for i, (_, row) in enumerate(rows_list[3:6], 4):
-                ai_key = f"{row['Plan ID']}_{ch}"
-                ai = ai_results.get(ai_key) if ai_results else None
-                st.markdown(_plan_card_html(row, i, is_good=True, ai_result=ai), unsafe_allow_html=True)
-
-        # ─── 导出 HTML ──────────────────────────────────────
-        plan_html += f'<div class="section-subheader">{ch}</div>'
-        plan_html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">'
-        plan_html += '<div>'
-        for i, (_, row) in enumerate(rows_list[:3], 1):
-            plan_html += _plan_card_html(row, i, is_good=True)
-        plan_html += '</div><div>'
-        for i, (_, row) in enumerate(rows_list[3:6], 4):
-            plan_html += _plan_card_html(row, i, is_good=True)
-        plan_html += '</div></div>'
-
-    if not has_data:
+    if not available_channels:
         st.info("当前筛选条件下没有足够的 Plan 数据进行分析")
+        return ""
+
+    # ─── 渠道 + 维度选择器（左右横排）─────────────────────
+    col_ch, col_dim = st.columns(2)
+    with col_ch:
+        selected_ch = st.radio("渠道", options=available_channels, index=0, horizontal=True, key="plan_ch")
+    with col_dim:
+        sort_dim = st.radio("排序", options=["综合评分", "CTR", "Sales"], index=0, horizontal=True, key="plan_dim")
+
+    # 按选中维度排序
+    ch_df = df[df["渠道"] == selected_ch].copy()
+    plan_agg = _aggregate_plans(ch_df)
+
+    if sort_dim == "综合评分":
+        plan_agg = plan_agg.sort_values("综合评分", ascending=False)
+    elif sort_dim == "CTR":
+        plan_agg = plan_agg.sort_values("CTR", ascending=False)
+    elif sort_dim == "Sales":
+        if "订单Sales" in plan_agg.columns:
+            plan_agg = plan_agg.sort_values("订单Sales", ascending=False)
+        else:
+            plan_agg = plan_agg.sort_values("综合评分", ascending=False)
+
+    top6 = plan_agg.head(6).reset_index(drop=True)
+
+    # ─── Streamlit 显示 ──────────────────────────────────
+    _render_plan_cards(top6, selected_ch, ai_results)
+
+    # ─── 导出 HTML（所有渠道，按评分排序）─────────────────
+    plan_html = ""
+    for ch in available_channels:
+        ch_df_exp = df[df["渠道"] == ch].copy()
+        plan_agg_exp = _aggregate_plans(ch_df_exp)
+        plan_agg_exp = plan_agg_exp.sort_values("综合评分", ascending=False)
+        top6_exp = plan_agg_exp.head(6).reset_index(drop=True)
+        plan_html += f'<div class="section-subheader">{ch}</div>'
+        plan_html += _export_plan_cards(top6_exp, ch, ai_results)
 
     return plan_html

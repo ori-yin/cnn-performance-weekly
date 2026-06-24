@@ -263,6 +263,29 @@ def _get_css() -> str:
   }
   .plan-card .plan-msg-text { color: #666; }
 
+  /* ─── AI 折叠 ─── */
+  details { margin-top: 8px; }
+  details summary {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--mcd-dark);
+    cursor: pointer;
+    padding: 4px 0;
+  }
+  details summary:hover { color: var(--mcd-red); }
+  details[open] summary { margin-bottom: 4px; }
+
+  /* ─── Plan 药丸豆腐块 ─── */
+  .plan-metrics { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .plan-metric-tag {
+    background: #F8F7F5;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    color: #888;
+    font-weight: 500;
+  }
+
   /* ─── 页脚 ─── */
   .footer {
     text-align: center;
@@ -280,7 +303,7 @@ def _get_logo_base64() -> str:
     return base64.b64encode(logo_path.read_bytes()).decode()
 
 
-def _render_topbar(today_str: str) -> str:
+def _render_topbar(period_str: str) -> str:
     """渲染顶部栏 HTML"""
     logo_b64 = _get_logo_base64()
     return f"""
@@ -293,8 +316,8 @@ def _render_topbar(today_str: str) -> str:
     </div>
   </div>
   <div class="topbar-right">
-    <span class="topbar-badge">Weekly Report</span><br>
-    {today_str} &nbsp; McDonald's China &middot; IT Operating &middot; Traffic
+    <span class="topbar-badge">{period_str}</span><br>
+    McDonald's China &middot; IT Operating &middot; Traffic
   </div>
 </div>
 """
@@ -362,7 +385,7 @@ def _render_section(num: int, title: str, content: str) -> str:
 """
 
 
-def generate_html(df, target: int, figs: dict, tables: dict, kpis: dict) -> str:
+def generate_html(df, target: int, figs: dict, tables: dict, kpis: dict, period_str: str = "") -> str:
     """
     生成完整的 HTML 文件。
 
@@ -372,7 +395,10 @@ def generate_html(df, target: int, figs: dict, tables: dict, kpis: dict) -> str:
         figs: 各 tab 的图表字典 {"summary": [fig1, fig2], "operational": [fig1, fig2], ...}
         tables: 各 tab 的表格 HTML 字典
         kpis: 各 tab 的 KPI 数据字典
+        period_str: 日期范围显示文本
     """
+    if not period_str:
+        period_str = date.today().strftime("%Y-%m-%d")
     today_str = date.today().strftime("%Y-%m-%d")
 
     # ─── Section 1: Executive Summary ───
@@ -433,7 +459,7 @@ def generate_html(df, target: int, figs: dict, tables: dict, kpis: dict) -> str:
 </head>
 <body>
 
-{_render_topbar(today_str)}
+{_render_topbar(period_str)}
 {_render_nav()}
 
 <div class="wrap">
