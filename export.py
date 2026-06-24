@@ -3,8 +3,13 @@ export.py - 导出看板为独立 HTML 文件
 """
 
 import base64
+import json
 from pathlib import Path
 from datetime import date
+
+import plotly.graph_objects as go
+
+from components import _fmt_number
 
 
 def _get_css() -> str:
@@ -114,7 +119,7 @@ def _get_css() -> str:
   /* ─── KPI 卡片 ─── */
   .kpi-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 12px;
     margin: 12px 0;
   }
@@ -307,17 +312,6 @@ def _render_nav() -> str:
 """
 
 
-def _fmt_number(val, unit=""):
-    """格式化数字：大数用 K/M，百分比保留 1 位（和 Streamlit 一致）"""
-    if unit == "%":
-        return f"{val:.1f}%"
-    if abs(val) >= 1_000_000:
-        return f"{val / 1_000_000:.1f}M"
-    elif abs(val) >= 1_000:
-        return f"{val / 1_000:.1f}K"
-    return f"{val:,.0f}"
-
-
 def _render_kpi_card(label: str, value, sub: str = "", status: str = "", unit: str = "") -> str:
     """渲染 KPI 卡片"""
     status_cls = f" {status}" if status else ""
@@ -343,9 +337,6 @@ def _render_kpi_row(cards_html: list) -> str:
 
 def _fig_to_html(fig_json: str) -> str:
     """将 Plotly 图表 JSON 转为 HTML 片段"""
-    import plotly.graph_objects as go
-    import json
-
     # 从 JSON 重建图表
     fig = go.Figure(json.loads(fig_json))
 
@@ -386,33 +377,42 @@ def generate_html(df, target: int, figs: dict, tables: dict, kpis: dict) -> str:
 
     # ─── Section 1: Executive Summary ───
     summary_kpis = kpis.get("summary", {})
-    row1 = [
-        _render_kpi_card("DAU Target（日均）", target),
-        _render_kpi_card("DAU Actual（日均）", summary_kpis.get("avg_dau", 0), status=summary_kpis.get("status", "")),
-        _render_kpi_card("达成率", summary_kpis.get("achievement_rate", 0), unit="%", status=summary_kpis.get("status", "")),
-    ]
-    row2 = [
-        _render_kpi_card("完成天数", summary_kpis.get("completion_str", "—"), sub=f'共 {summary_kpis.get("days_count", 0)} 天'),
-        _render_kpi_card("总触达成功", summary_kpis.get("total_reach", 0)),
-        _render_kpi_card("总订单Sales", summary_kpis.get("total_sales", 0)),
+    ach_rate = summary_kpis.get("achievement_rate", 0)
+    ach_sub = f"{ach_rate:.1f}% 达成" if ach_rate > 0 else ""
+    days_count = summary_kpis.get("days_count", 0)
+    comp_str = summary_kpis.get("completion_str", "—")
+    comp_sub = f"完成 {comp_str}（共 {days_count} 天）" if days_count > 0 else ""
+
+    cards = [
+        _render_kpi_card("DAU Target（日均）", target, sub=comp_sub),
+        _render_kpi_card("DAU Actual（日均）", summary_kpis.get("avg_dau", 0), sub=ach_sub, status=summary_kpis.get("status", "")),
+        _render_kpi_card("触达成功（日均）", summary_kpis.get("avg_reach", 0)),
+        _render_kpi_card("订单Sales（日均）", summary_kpis.get("avg_sales", 0)),
     ]
 
-    summary_content = _render_kpi_row(row1) + _render_kpi_row(row2)
+    summary_content = _render_kpi_row(cards)
     for fig in figs.get("summary", []):
         summary_content += _fig_to_html(fig)
 
     # ─── Section 2: Operational ───
     op_kpis = kpis.get("operational", {})
     op_cards = [
-        _render_kpi_card("Operational 总触达", op_kpis.get("total_reach", 0)),
-        _render_kpi_card("Operational 总点击", op_kpis.get("total_clicks", 0)),
+        _render_kpi_card("触达成功（日均）", op_kpis.get("avg_reach", 0)),
+        _render_kpi_card("点击人次（日均）", op_kpis.get("avg_clicks", 0)),
         _render_kpi_card("AARR 占比", op_kpis.get("aarr_pct", 0), unit="%"),
         _render_kpi_card("常规 占比", op_kpis.get("normal_pct", 0), unit="%"),
     ]
     op_content = _render_kpi_row(op_cards)
-    for fig in figs.get("operational", []):
-        op_content += _fig_to_html(fig)
+    op_figs = figs.get("operational", [])
+    # 第一个图：AARR + 常规 堆积
+    if len(op_figs) > 0:
+        op_content += _fig_to_html(op_figs[0])
+    # 分渠道明细表格
     op_content += tables.get("operational", "")
+    # 第二个图：分渠道堆积（vs Target）
+    if len(op_figs) > 1:
+        op_content += '<div class="section-subheader">分渠道堆积（vs Target）</div>'
+        op_content += _fig_to_html(op_figs[1])
 
     # ─── Section 3: BU ───
     bu_content = tables.get("bu", "")

@@ -6,7 +6,7 @@ AARR / 常规 × 渠道，堆积柱状图 + 折叠展开
 import streamlit as st
 import plotly.graph_objects as go
 import pandas as pd
-from config import MCD_RED, MCD_GOLD, MCD_GREEN, MCD_BG, CHANNELS
+from config import MCD_RED, MCD_GOLD, MCD_GREEN, THEME_BG, CHANNELS
 from components import section_header, kpi_card, kpi_row
 
 
@@ -23,8 +23,8 @@ def _compute_metrics(df: pd.DataFrame) -> dict:
     }
 
 
-def _channel_detail_table(df_sub: pd.DataFrame, plan_type_label: str) -> str:
-    """渲染单个计划类型的渠道明细表，返回 HTML"""
+def _channel_detail_table(df_sub: pd.DataFrame, plan_type_label: str, days_count: int) -> str:
+    """渲染单个计划类型的渠道明细表（日均），返回 HTML"""
     rows = []
     for ch in CHANNELS:
         ch_df = df_sub[df_sub["渠道"] == ch]
@@ -33,13 +33,13 @@ def _channel_detail_table(df_sub: pd.DataFrame, plan_type_label: str) -> str:
         m = _compute_metrics(ch_df)
         rows.append({
             "渠道": ch,
-            "触达成功": int(m["触达成功"]),
-            "点击人次": int(m["点击人次"]),
+            "触达成功": int(m["触达成功"] / days_count) if days_count > 0 else 0,
+            "点击人次": int(m["点击人次"] / days_count) if days_count > 0 else 0,
             "CTR": m["CTR"],
-            "订单GC": int(m["订单GC"]),
+            "订单GC": int(m["订单GC"] / days_count) if days_count > 0 else 0,
             "GC转化率": m["GC转化率"],
             "Plan数": m["Plan数"],
-            "订单Sales": m["订单Sales"],
+            "订单Sales": round(m["订单Sales"] / days_count, 2) if days_count > 0 else 0,
         })
 
     if not rows:
@@ -56,28 +56,28 @@ def _channel_detail_table(df_sub: pd.DataFrame, plan_type_label: str) -> str:
         rows_html += (
             f"<tr>"
             f"<td style='{td_style}'>{r['渠道']}</td>"
+            f"<td style='{td_style}text-align:right;'>{r['Plan数']}</td>"
             f"<td style='{td_style}text-align:right;'>{r['触达成功']:,}</td>"
             f"<td style='{td_style}text-align:right;'>{r['点击人次']:,}</td>"
             f"<td style='{td_style}text-align:right;'>{r['CTR']:.2f}%</td>"
             f"<td style='{td_style}text-align:right;'>{r['订单GC']:,}</td>"
             f"<td style='{td_style}text-align:right;'>{r['GC转化率']:.1f}%</td>"
-            f"<td style='{td_style}text-align:right;'>{r['Plan数']}</td>"
             f"<td style='{td_style}text-align:right;'>{r['订单Sales']:,.2f}</td>"
             f"</tr>"
         )
 
     table_html = (
-        f'<div style="font-size:13px;font-weight:600;color:#2b2620;margin:12px 0 8px;">{plan_type_label} 分渠道</div>'
+        f'<div style="font-size:13px;font-weight:600;color:#2b2620;margin:12px 0 8px;">{plan_type_label}</div>'
         f'<table style="width:100%;border-collapse:collapse;font-size:13px;background:#fffdf8;border-radius:9px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);">'
         f'<thead><tr>'
         f'<th style="{TH}text-align:left;">渠道</th>'
-        f'<th style="{TH}text-align:right;">触达成功</th>'
-        f'<th style="{TH}text-align:right;">点击人次</th>'
-        f'<th style="{TH}text-align:right;">CTR</th>'
-        f'<th style="{TH}text-align:right;">订单GC</th>'
-        f'<th style="{TH}text-align:right;">GC转化率</th>'
         f'<th style="{TH}text-align:right;">Plan数</th>'
-        f'<th style="{TH}text-align:right;">订单Sales</th>'
+        f'<th style="{TH}text-align:right;">触达成功（日均）</th>'
+        f'<th style="{TH}text-align:right;">点击人次（日均）</th>'
+        f'<th style="{TH}text-align:right;">CTR</th>'
+        f'<th style="{TH}text-align:right;">订单GC（日均）</th>'
+        f'<th style="{TH}text-align:right;">GC转化率</th>'
+        f'<th style="{TH}text-align:right;">订单Sales（日均）</th>'
         f'</tr></thead>'
         f'<tbody>{rows_html}</tbody>'
         f'</table>'
@@ -99,14 +99,15 @@ def render(df: pd.DataFrame, target: int):
         st.info("当前筛选条件下没有 Operational 数据")
         return
 
-    # ─── 汇总 KPI ──────────────────────────────────────
+    # ─── 汇总 KPI（日均）─────────────────────────────────
+    days_count = df_op["发送日期"].dt.date.nunique()
     m_total = _compute_metrics(df_op)
     m_aarr = _compute_metrics(df_op[df_op["计划类型"] == "AARRPlan"])
     m_normal = _compute_metrics(df_op[df_op["计划类型"] == "常规Plan"])
 
     cards = [
-        kpi_card("Operational 总触达", int(m_total["触达成功"])),
-        kpi_card("Operational 总点击", int(m_total["点击人次"])),
+        kpi_card("触达成功（日均）", int(m_total["触达成功"] / days_count) if days_count > 0 else 0),
+        kpi_card("点击人次（日均）", int(m_total["点击人次"] / days_count) if days_count > 0 else 0),
         kpi_card("AARR 占比", m_aarr["点击人次"] / m_total["点击人次"] * 100 if m_total["点击人次"] > 0 else 0, unit="%"),
         kpi_card("常规 占比", m_normal["点击人次"] / m_total["点击人次"] * 100 if m_total["点击人次"] > 0 else 0, unit="%"),
     ]
@@ -127,6 +128,11 @@ def render(df: pd.DataFrame, target: int):
     all_dates = sorted(daily_type["日期"].unique())
     daily_aarr = daily_aarr.reindex(all_dates, fill_value=0)
     daily_normal = daily_normal.reindex(all_dates, fill_value=0)
+    daily_total = daily_aarr.values + daily_normal.values
+
+    # 百分比文本
+    aarr_pct = [f"{a / t * 100:.0f}%" if t > 0 else "" for a, t in zip(daily_aarr.values, daily_total)]
+    normal_pct = [f"{n / t * 100:.0f}%" if t > 0 else "" for n, t in zip(daily_normal.values, daily_total)]
 
     fig = go.Figure()
 
@@ -137,6 +143,9 @@ def render(df: pd.DataFrame, target: int):
         name="AARR",
         marker_color=MCD_RED,
         opacity=0.85,
+        text=aarr_pct,
+        textposition="inside",
+        textfont=dict(size=10, color="#fff"),
     ))
 
     # 常规柱（堆叠在上面）
@@ -146,6 +155,9 @@ def render(df: pd.DataFrame, target: int):
         name="常规",
         marker_color=MCD_GOLD,
         opacity=0.85,
+        text=normal_pct,
+        textposition="inside",
+        textfont=dict(size=10, color="#5a1a00"),
     ))
 
     # Target 水平线
@@ -164,8 +176,8 @@ def render(df: pd.DataFrame, target: int):
         barmode="stack",
         height=320,
         margin=dict(l=60, r=20, t=30, b=40),
-        plot_bgcolor="#f4efe6",
-        paper_bgcolor="#f4efe6",
+        plot_bgcolor=THEME_BG,
+        paper_bgcolor=THEME_BG,
         xaxis=dict(title="", gridcolor="#E8E8E8", tickformat="%m/%d\n%a"),
         yaxis=dict(title="DAU（点击人次）", gridcolor="#E8E8E8", tickformat=","),
         legend=dict(
@@ -181,8 +193,8 @@ def render(df: pd.DataFrame, target: int):
 
     st.plotly_chart(fig, use_container_width=True)
 
-    # ─── 分渠道每日趋势 ─────────────────────────────────
-    st.markdown('<div class="section-subheader">分渠道每日趋势</div>', unsafe_allow_html=True)
+    # ─── 分渠道堆积柱状图（vs Target，含渠道占比）──────────
+    st.markdown('<div class="section-subheader">分渠道堆积（vs Target）</div>', unsafe_allow_html=True)
 
     daily_ch = df_op.groupby([df_op["发送日期"].dt.date, "渠道"]).agg(
         DAU=("点击人次", "sum"),
@@ -195,36 +207,56 @@ def render(df: pd.DataFrame, target: int):
         "短信": MCD_GREEN,
         "微信小程序订阅消息": "#5B5BD6",
     }
+    # 浅色柱子用深色字，深色柱子用白色字
+    ch_text_color = {
+        "APP Push": "#fff",
+        "企微1v1": "#5a1a00",
+        "短信": "#fff",
+        "微信小程序订阅消息": "#fff",
+    }
 
-    fig2 = go.Figure()
+    # 计算每天总 DAU，用于算百分比
+    daily_total = daily_ch.groupby("日期")["DAU"].sum().to_dict()
+
+    fig_ch_stack = go.Figure()
     for ch in CHANNELS:
-        subset = daily_ch[daily_ch["渠道"] == ch]
+        subset = daily_ch[daily_ch["渠道"] == ch].copy()
         if len(subset) > 0:
-            fig2.add_trace(go.Scatter(
+            subset["pct"] = subset.apply(
+                lambda r: f"{r['DAU'] / daily_total[r['日期']] * 100:.0f}%" if daily_total.get(r["日期"], 0) > 0 else "",
+                axis=1,
+            )
+            fig_ch_stack.add_trace(go.Bar(
                 x=subset["日期"],
                 y=subset["DAU"],
-                mode="lines+markers",
                 name=ch,
-                line=dict(color=ch_colors.get(ch, "#999"), width=2),
-                marker=dict(size=4),
+                marker_color=ch_colors.get(ch, "#999"),
+                opacity=0.85,
+                text=subset["pct"],
+                textposition="inside",
+                textfont=dict(size=10, color=ch_text_color.get(ch, "#fff")),
             ))
 
     if target > 0:
-        fig2.add_hline(y=target, line_dash="dash", line_color="#1a1a1a", line_width=1.5,
-                       annotation_text="Target", annotation_position="top right",
-                       annotation_font=dict(size=12, color="#1a1a1a"))
+        fig_ch_stack.add_hline(
+            y=target, line_dash="dash", line_color="#1a1a1a", line_width=2,
+            annotation_text=f"Target: {target:,.0f}",
+            annotation_position="top right",
+            annotation_font=dict(size=12, color="#1a1a1a"),
+        )
 
-    fig2.update_layout(
-        height=280,
+    fig_ch_stack.update_layout(
+        barmode="stack",
+        height=320,
         margin=dict(l=60, r=20, t=30, b=40),
-        plot_bgcolor=MCD_BG,
-        paper_bgcolor=MCD_BG,
-        xaxis=dict(title="", gridcolor="#E8E8E8", tickformat="%m/%d"),
-        yaxis=dict(title="DAU", gridcolor="#E8E8E8", tickformat=","),
+        plot_bgcolor=THEME_BG,
+        paper_bgcolor=THEME_BG,
+        xaxis=dict(title="", gridcolor="#E8E8E8", tickformat="%m/%d\n%a"),
+        yaxis=dict(title="DAU（点击人次）", gridcolor="#E8E8E8", tickformat=","),
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, font=dict(size=11)),
         font=dict(family="'PingFang SC', 'Microsoft YaHei', sans-serif"),
     )
-    st.plotly_chart(fig2, use_container_width=True)
+    st.plotly_chart(fig_ch_stack, use_container_width=True)
 
     # ─── 分渠道明细 ──────────────────────────────────────
     st.markdown('<div class="section-subheader">分渠道明细</div>', unsafe_allow_html=True)
@@ -234,21 +266,20 @@ def render(df: pd.DataFrame, target: int):
 
     detail_html = ""
     if len(df_aarr) > 0:
-        detail_html += _channel_detail_table(df_aarr, "AARR")
+        detail_html += _channel_detail_table(df_aarr, "AARR", days_count)
 
     if len(df_normal) > 0:
-        detail_html += _channel_detail_table(df_normal, "常规")
+        detail_html += _channel_detail_table(df_normal, "常规", days_count)
 
     # ─── 返回数据供导出（用 JSON 序列化避免 deepcopy 问题）─────
-    import json
     fig_json = fig.to_json()
-    fig2_json = fig2.to_json()
+    fig_ch_stack_json = fig_ch_stack.to_json()
 
     kpis = {
-        "total_reach": int(m_total["触达成功"]),
-        "total_clicks": int(m_total["点击人次"]),
+        "avg_reach": int(m_total["触达成功"] / days_count) if days_count > 0 else 0,
+        "avg_clicks": int(m_total["点击人次"] / days_count) if days_count > 0 else 0,
         "aarr_pct": round(m_aarr["点击人次"] / m_total["点击人次"] * 100, 1) if m_total["点击人次"] > 0 else 0,
         "normal_pct": round(m_normal["点击人次"] / m_total["点击人次"] * 100, 1) if m_total["点击人次"] > 0 else 0,
     }
-    figs = [fig_json, fig2_json]
+    figs = [fig_json, fig_ch_stack_json]
     return figs, kpis, detail_html

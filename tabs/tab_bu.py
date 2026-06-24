@@ -4,9 +4,7 @@ tab_bu.py - 第三层：BU 分析
 """
 
 import streamlit as st
-import plotly.graph_objects as go
 import pandas as pd
-from config import MCD_RED, MCD_GOLD, MCD_GREEN
 from components import section_header
 
 
@@ -44,8 +42,57 @@ def render(df: pd.DataFrame):
 
     bu_df = pd.DataFrame(bu_rows)
     bu_df = bu_df.sort_values("点击人次", ascending=False).reset_index(drop=True)
+    days_count = df["发送日期"].dt.date.nunique()
 
-    # ─── BU 总览表 ──────────────────────────────────────
+    # ─── BU 排行榜（4 个榜单横排）──────────────────────────
+    st.markdown('<div class="section-subheader">BU 排行榜</div>', unsafe_allow_html=True)
+
+    def _fmt_val(val, unit=""):
+        if unit == "%":
+            return f"{val:.2f}%"
+        if val >= 1_000_000:
+            return f"{val/1_000_000:.1f}M"
+        if val >= 1_000:
+            return f"{val/1_000:.1f}K"
+        return f"{val:,.0f}"
+
+    def _rank_html(title, sorted_df, metric_col, unit=""):
+        medal_bg = ["#FFF8E1", "#F5F5F5", "#FBE9E7"]
+        medal_icon = ["🥇", "🥈", "🥉"]
+        rows = ""
+        for i, (_, row) in enumerate(sorted_df.head(5).iterrows()):
+            bg = medal_bg[i] if i < 3 else "#fff"
+            icon = medal_icon[i] if i < 3 else f'<span style="color:#999;font-size:11px;">{i+1}.</span>'
+            val = _fmt_val(row[metric_col], unit)
+            rows += (
+                f'<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:{bg};border-radius:6px;margin-bottom:3px;">'
+                f'<span style="width:22px;text-align:center;flex-shrink:0;">{icon}</span>'
+                f'<span style="flex:1;font-size:12px;font-weight:600;color:#2b2620;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{row["BU"]}</span>'
+                f'<span style="font-size:12px;color:#5a5048;font-variant-numeric:tabular-nums;flex-shrink:0;">{val}</span>'
+                f'</div>'
+            )
+        return (
+            f'<div style="background:#fffdf8;border:1px solid #e4d9bf;border-radius:10px;padding:12px;">'
+            f'<div style="font-size:13px;font-weight:700;color:#a8001a;margin-bottom:8px;">{title}</div>'
+            f'{rows}</div>'
+        )
+
+    rank_plan = bu_df.sort_values("Plan数", ascending=False)
+    rank_reach = bu_df.sort_values("触达成功", ascending=False)
+    rank_ctr = bu_df[bu_df["触达成功"] >= 10000].sort_values("CTR", ascending=False)
+    rank_sales = bu_df.sort_values("订单Sales", ascending=False)
+
+    c1, c2, c3, c4 = st.columns(4)
+    with c1:
+        st.markdown(_rank_html("Plan数 TOP5", rank_plan, "Plan数"), unsafe_allow_html=True)
+    with c2:
+        st.markdown(_rank_html("触达成功 TOP5", rank_reach, "触达成功"), unsafe_allow_html=True)
+    with c3:
+        st.markdown(_rank_html("CTR TOP5", rank_ctr, "CTR", unit="%"), unsafe_allow_html=True)
+    with c4:
+        st.markdown(_rank_html("Sales TOP5", rank_sales, "订单Sales"), unsafe_allow_html=True)
+
+    # ─── BU 总览表（构建一次，显示+导出共用）─────────────────
     st.markdown('<div class="section-subheader">BU 总览</div>', unsafe_allow_html=True)
 
     TH = "background:#a8001a;color:#fff;padding:9px 11px;font-weight:700;font-size:11.5px;"
@@ -55,92 +102,17 @@ def render(df: pd.DataFrame):
     rows_html = ""
     for i, (_, row) in enumerate(bu_df.iterrows()):
         td_style = TD_EVEN if i % 2 == 1 else TD
+        d = days_count if days_count > 0 else 1
         rows_html += (
             f"<tr>"
             f"<td style='{td_style}font-weight:600;'>{row['BU']}</td>"
             f"<td style='{td_style}text-align:right;'>{row['Plan数']}</td>"
-            f"<td style='{td_style}text-align:right;'>{row['触达成功']:,}</td>"
-            f"<td style='{td_style}text-align:right;'>{row['点击人次']:,}</td>"
+            f"<td style='{td_style}text-align:right;'>{int(row['触达成功'] / d):,}</td>"
+            f"<td style='{td_style}text-align:right;'>{int(row['点击人次'] / d):,}</td>"
             f"<td style='{td_style}text-align:right;'>{row['CTR']:.2f}%</td>"
-            f"<td style='{td_style}text-align:right;'>{row['订单GC']:,}</td>"
+            f"<td style='{td_style}text-align:right;'>{int(row['订单GC'] / d):,}</td>"
             f"<td style='{td_style}text-align:right;'>{row['GC转化率']:.1f}%</td>"
-            f"<td style='{td_style}text-align:right;'>{row['订单Sales']:,.2f}</td>"
-            f"</tr>"
-        )
-
-    st.markdown(
-        f'<table style="width:100%;border-collapse:collapse;font-size:13px;background:#fffdf8;border-radius:9px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);">'
-        f'<thead><tr>'
-        f'<th style="{TH}text-align:left;">BU</th>'
-        f'<th style="{TH}text-align:right;">Plan数</th>'
-        f'<th style="{TH}text-align:right;">触达成功</th>'
-        f'<th style="{TH}text-align:right;">点击人次</th>'
-        f'<th style="{TH}text-align:right;">CTR</th>'
-        f'<th style="{TH}text-align:right;">订单GC</th>'
-        f'<th style="{TH}text-align:right;">GC转化率</th>'
-        f'<th style="{TH}text-align:right;">订单Sales</th>'
-        f'</tr></thead>'
-        f'<tbody>{rows_html}</tbody>'
-        f'</table>',
-        unsafe_allow_html=True,
-    )
-
-    # ─── BU 贡献柱状图（可切换触达/点击）─────────────────
-    st.markdown('<div class="section-subheader">BU 贡献</div>', unsafe_allow_html=True)
-
-    chart_metric = st.radio(
-        "指标",
-        options=["触达成功", "点击人次"],
-        horizontal=True,
-        label_visibility="collapsed",
-        key="bu_chart_metric",
-    )
-
-    top_n = bu_df.head(15)
-    bar_color = MCD_RED if chart_metric == "触达成功" else MCD_GOLD
-
-    fig = go.Figure()
-    fig.add_trace(go.Bar(
-        x=top_n["BU"],
-        y=top_n[chart_metric],
-        marker_color=bar_color,
-        name=chart_metric,
-        text=top_n[chart_metric].apply(lambda x: f"{x:,}"),
-        textposition="outside",
-        textfont=dict(size=10),
-    ))
-
-    fig.update_layout(
-        height=300,
-        margin=dict(l=60, r=20, t=30, b=60),
-        plot_bgcolor="#f4efe6",
-        paper_bgcolor="#f4efe6",
-        xaxis=dict(title="", gridcolor="#E8E8E8", tickangle=-30),
-        yaxis=dict(title=chart_metric, gridcolor="#E8E8E8", tickformat=","),
-        showlegend=False,
-        font=dict(family="'PingFang SC', 'Microsoft YaHei', sans-serif"),
-    )
-
-    st.plotly_chart(fig, use_container_width=True)
-
-    # ─── 生成 BU 表格 HTML 供导出 ──────────────────────────
-    TH = "background:#a8001a;color:#fff;padding:9px 11px;font-weight:700;font-size:11.5px;"
-    TD = "padding:8px 11px;border-bottom:1px solid #f0e8d6;"
-    TD_EVEN = "padding:8px 11px;border-bottom:1px solid #f0e8d6;background:#fcfaf3;"
-
-    bu_table_rows = ""
-    for i, (_, row) in enumerate(bu_df.iterrows()):
-        td_style = TD_EVEN if i % 2 == 1 else TD
-        bu_table_rows += (
-            f"<tr>"
-            f"<td style='{td_style}font-weight:600;'>{row['BU']}</td>"
-            f"<td style='{td_style}text-align:right;'>{row['Plan数']}</td>"
-            f"<td style='{td_style}text-align:right;'>{row['触达成功']:,}</td>"
-            f"<td style='{td_style}text-align:right;'>{row['点击人次']:,}</td>"
-            f"<td style='{td_style}text-align:right;'>{row['CTR']:.2f}%</td>"
-            f"<td style='{td_style}text-align:right;'>{row['订单GC']:,}</td>"
-            f"<td style='{td_style}text-align:right;'>{row['GC转化率']:.1f}%</td>"
-            f"<td style='{td_style}text-align:right;'>{row['订单Sales']:,.2f}</td>"
+            f"<td style='{td_style}text-align:right;'>{row['订单Sales'] / d:,.2f}</td>"
             f"</tr>"
         )
 
@@ -149,52 +121,16 @@ def render(df: pd.DataFrame):
         f'<thead><tr>'
         f'<th style="{TH}text-align:left;">BU</th>'
         f'<th style="{TH}text-align:right;">Plan数</th>'
-        f'<th style="{TH}text-align:right;">触达成功</th>'
-        f'<th style="{TH}text-align:right;">点击人次</th>'
+        f'<th style="{TH}text-align:right;">触达成功（日均）</th>'
+        f'<th style="{TH}text-align:right;">点击人次（日均）</th>'
         f'<th style="{TH}text-align:right;">CTR</th>'
-        f'<th style="{TH}text-align:right;">订单GC</th>'
+        f'<th style="{TH}text-align:right;">订单GC（日均）</th>'
         f'<th style="{TH}text-align:right;">GC转化率</th>'
-        f'<th style="{TH}text-align:right;">订单Sales</th>'
+        f'<th style="{TH}text-align:right;">订单Sales（日均）</th>'
         f'</tr></thead>'
-        f'<tbody>{bu_table_rows}</tbody>'
+        f'<tbody>{rows_html}</tbody>'
         f'</table>'
     )
+    st.markdown(bu_table_html, unsafe_allow_html=True)
 
-    # ─── 返回数据供导出（两个指标的图都生成）─────────────────
-    fig_reach = go.Figure()
-    fig_reach.add_trace(go.Bar(
-        x=top_n["BU"], y=top_n["触达成功"],
-        marker_color=MCD_RED, name="触达成功",
-        text=top_n["触达成功"].apply(lambda x: f"{x:,}"),
-        textposition="outside", textfont=dict(size=10),
-    ))
-    fig_reach.update_layout(
-        height=300, margin=dict(l=40, r=20, t=30, b=60),
-        plot_bgcolor="#f4efe6", paper_bgcolor="#f4efe6",
-        xaxis=dict(title="", gridcolor="#E8E8E8", tickangle=-30),
-        yaxis=dict(title="触达成功", gridcolor="#E8E8E8", tickformat=","),
-        showlegend=False, font=dict(family="'PingFang SC', 'Microsoft YaHei', sans-serif"),
-    )
-
-    fig_click = go.Figure()
-    fig_click.add_trace(go.Bar(
-        x=top_n["BU"], y=top_n["点击人次"],
-        marker_color=MCD_GOLD, name="点击人次",
-        text=top_n["点击人次"].apply(lambda x: f"{x:,}"),
-        textposition="outside", textfont=dict(size=10),
-    ))
-    fig_click.update_layout(
-        height=300, margin=dict(l=40, r=20, t=30, b=60),
-        plot_bgcolor="#f4efe6", paper_bgcolor="#f4efe6",
-        xaxis=dict(title="", gridcolor="#E8E8E8", tickangle=-30),
-        yaxis=dict(title="点击人次", gridcolor="#E8E8E8", tickformat=","),
-        showlegend=False, font=dict(family="'PingFang SC', 'Microsoft YaHei', sans-serif"),
-    )
-
-    # 用 JSON 序列化避免 deepcopy 问题
-    import json
-    fig_reach_json = fig_reach.to_json()
-    fig_click_json = fig_click.to_json()
-
-    figs = [fig_reach_json, fig_click_json]
-    return figs, bu_table_html
+    return [], bu_table_html

@@ -17,13 +17,6 @@ THEME_INK2 = "#5a5048"      # 副文字
 THEME_LINE = "#e4d9bf"      # 边框线
 THEME_ROW_ALT = "#fcfaf3"   # 交替行背景
 
-# 兼容旧名
-MCD_BG = THEME_BG
-MCD_CARD_BG = THEME_PAPER
-MCD_TEXT = THEME_INK
-MCD_TEXT_SUB = THEME_INK2
-MCD_TEXT_MUTED = "#999999"
-MCD_BORDER = THEME_LINE
 
 # ─── 状态阈值 ──────────────────────────────────────────────────
 # 绿 = 达成 / 黄 = 落后 5-15% / 红 = 落后 15%+

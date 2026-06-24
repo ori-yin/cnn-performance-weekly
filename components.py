@@ -3,7 +3,7 @@ components.py - CNN Performance Weekly：可复用 UI 组件
 参考 mcd-reach-trend 的 KPI Card 组件
 """
 
-from config import MCD_RED, MCD_GOLD, MCD_GREEN, MCD_CARD_BG, MCD_BORDER, MCD_TEXT, MCD_TEXT_SUB
+from config import MCD_RED, MCD_GOLD, MCD_GREEN, THEME_PAPER, THEME_LINE, THEME_INK, THEME_INK2
 
 
 def _fmt_number(val, unit=""):

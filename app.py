@@ -2,6 +2,9 @@
 app.py - CNN Performance Weekly 主入口
 """
 
+import base64
+from pathlib import Path
+
 import streamlit as st
 from datetime import date, timedelta
 
@@ -13,14 +16,11 @@ from tabs.tab_summary import render as render_summary
 from tabs.tab_operational import render as render_operational
 from tabs.tab_bu import render as render_bu
 from tabs.tab_plan import render as render_plan
+from export import generate_html
 
 
-def render_topbar(today_str: str):
+def render_topbar():
     """渲染顶部栏"""
-    import base64
-    from pathlib import Path
-
-    # 读取 logo 并转 base64
     logo_path = Path(__file__).parent / "mcdonalds.png"
     logo_b64 = base64.b64encode(logo_path.read_bytes()).decode()
 
@@ -35,10 +35,23 @@ def render_topbar(today_str: str):
       </div>
       <div class="topbar-right">
         <span class="topbar-badge">Weekly Report</span><br>
-        {today_str} &nbsp; McDonald's China &middot; IT Operating &middot; Traffic
+        McDonald's China &middot; IT Operating &middot; Traffic
       </div>
     </div>
     """, unsafe_allow_html=True)
+
+
+def update_topbar_badge(text: str):
+    """用 JS 更新顶部栏 badge 文字"""
+    import streamlit.components.v1 as components
+    components.html(f"""
+    <script>
+    (function() {{
+      var badge = parent.document.querySelector('.topbar-badge');
+      if (badge) badge.textContent = '{text}';
+    }})();
+    </script>
+    """, height=0)
 
 
 def render_nav():
@@ -55,7 +68,7 @@ def render_nav():
 
 def render_fixed_header_js():
     """用 JS 把 topbar 和 nav 移到 body 层级，实现真正固定"""
-    import streamlit.components.v1 as components
+    import streamlit.components.v1 as components  # noqa: E402 — Streamlit lazy init
     components.html("""
     <script>
     (function() {
@@ -95,14 +108,9 @@ def main():
 
     st.markdown(get_css(), unsafe_allow_html=True)
 
-    # ─── 顶部栏 ─────────────────────────────────────────
-    today_str = date.today().strftime("%Y-%m-%d")
-    render_topbar(today_str)
-
-    # ─── 导航栏 ─────────────────────────────────────────
+    # ─── 顶部栏 + 导航栏 ──────────────────────────────────
+    render_topbar()
     render_nav()
-
-    # ─── 固定 header JS ──────────────────────────────────
     render_fixed_header_js()
 
     # ─── 侧边栏：文件上传 ────────────────────────────────
@@ -153,6 +161,9 @@ def main():
         start_date = st.date_input("开始日期", value=default_start, min_value=data_min, max_value=data_max)
         end_date = st.date_input("结束日期", value=default_end, min_value=data_min, max_value=data_max)
 
+    # 更新顶部栏 badge 显示所选日期范围
+    update_topbar_badge(f"{start_date} ~ {end_date}")
+
     df = filter_week_data(raw_df, start_date, end_date)
     if df.empty:
         st.warning(f"所选日期范围 [{start_date} ~ {end_date}] 内无数据")
@@ -202,8 +213,6 @@ def main():
     plan_html = render_plan(df)
 
     # ─── 导出 HTML 按钮 ──────────────────────────────────────
-    from export import generate_html
-
     with st.sidebar:
         st.markdown("---")
         st.markdown("##### 导出分享")

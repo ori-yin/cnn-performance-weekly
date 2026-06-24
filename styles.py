@@ -3,7 +3,7 @@ styles.py - CNN Performance Weekly：CSS 样式
 参考 ITO Traffic Operating Framework 的暖色纸张风格
 """
 
-from config import MCD_RED, MCD_GOLD, MCD_GREEN
+from config import MCD_RED, MCD_GOLD, MCD_GREEN, MCD_DARK_RED, THEME_BG, THEME_PAPER, THEME_INK, THEME_INK2, THEME_LINE, THEME_ROW_ALT
 
 
 def get_css() -> str:
@@ -15,21 +15,21 @@ def get_css() -> str:
   }}
   html, body, .stApp {{
     font-family: 'Microsoft YaHei', 'PingFang SC', -apple-system, sans-serif !important;
-    background: #f4efe6;
-    color: #2b2620;
+    background: {THEME_BG};
+    color: {THEME_INK};
   }}
 
   /* ─── 侧边栏 ─── */
   [data-testid="stSidebar"] {{
-    background: #fffdf8 !important;
-    border-right: 1px solid #e4d9bf;
+    background: {THEME_PAPER} !important;
+    border-right: 1px solid {THEME_LINE};
     border-top: 3px solid {MCD_GOLD};
   }}
 
   [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p,
   [data-testid="stSidebar"] label,
   [data-testid="stSidebar"] p {{
-    color: #2b2620 !important;
+    color: {THEME_INK} !important;
     font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif !important;
   }}
 
@@ -38,7 +38,7 @@ def get_css() -> str:
   [data-testid="stSidebar"] .stTextInput label,
   [data-testid="stSidebar"] .stNumberInput label,
   [data-testid="stSidebar"] .stDateInput label {{
-    color: #5a5048 !important;
+    color: {THEME_INK2} !important;
     font-weight: 600;
     font-size: 12px;
     letter-spacing: 0.02em;
@@ -46,7 +46,7 @@ def get_css() -> str:
   }}
 
   [data-testid="stSidebar"] hr {{
-    border-color: #e4d9bf !important;
+    border-color: {THEME_LINE} !important;
     margin: 16px 0;
   }}
 
@@ -55,10 +55,10 @@ def get_css() -> str:
   [data-testid="stSidebar"] .stNumberInput > div > div,
   [data-testid="stSidebar"] .stDateInput > div > div,
   [data-testid="stSidebar"] .stFileUploader > div {{
-    background: #fffdf8 !important;
+    background: {THEME_PAPER} !important;
     border: 1.5px solid #d4c9af !important;
     border-radius: 6px !important;
-    color: #2b2620 !important;
+    color: {THEME_INK} !important;
   }}
 
   [data-testid="stSidebar"] .stFileUploader {{
@@ -102,7 +102,7 @@ def get_css() -> str:
   .section-header {{
     font-size: 19px;
     font-weight: 800;
-    color: #a8001a;
+    color: {MCD_DARK_RED};
     padding: 20px 0 8px 0;
     border-bottom: 2px solid {MCD_RED};
     margin-bottom: 14px;
@@ -112,15 +112,15 @@ def get_css() -> str:
   .section-subheader {{
     font-size: 14px;
     font-weight: 600;
-    color: #5a5048;
+    color: {THEME_INK2};
     margin: 14px 0 8px 0;
     letter-spacing: 0.02em;
   }}
 
   /* ─── KPI Card：暖色纸张风 ─── */
   .kpi-card {{
-    background: #fffdf8;
-    border: 1px solid #e4d9bf;
+    background: {THEME_PAPER};
+    border: 1px solid {THEME_LINE};
     border-radius: 10px;
     padding: 14px 16px;
     display: flex;
@@ -147,7 +147,7 @@ def get_css() -> str:
   .kpi-label {{
     font-size: 11px;
     font-weight: 600;
-    color: #5a5048;
+    color: {THEME_INK2};
     margin-bottom: 6px;
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -156,7 +156,7 @@ def get_css() -> str:
   .kpi-value {{
     font-size: 26px;
     font-weight: 800;
-    color: #2b2620;
+    color: {THEME_INK};
     letter-spacing: -0.02em;
     line-height: 1;
     margin-bottom: 4px;
@@ -165,7 +165,7 @@ def get_css() -> str:
 
   .kpi-sub {{
     font-size: 12px;
-    color: #5a5048;
+    color: {THEME_INK2};
     font-variant-numeric: tabular-nums;
   }}
 
@@ -180,7 +180,7 @@ def get_css() -> str:
   .dataframe th {{
     font-weight: 700 !important;
     color: #fff !important;
-    background: #a8001a !important;
+    background: {MCD_DARK_RED} !important;
     font-size: 11.5px !important;
     padding: 9px 11px !important;
   }}
@@ -189,7 +189,7 @@ def get_css() -> str:
     border-bottom: 1px solid #f0e8d6 !important;
   }}
   .dataframe tr:nth-child(even) td {{
-    background: #fcfaf3 !important;
+    background: {THEME_ROW_ALT} !important;
   }}
 
   /* ─── 锚点跳转偏移（补偿固定 header 高度）─── */
@@ -200,13 +200,13 @@ def get_css() -> str:
   /* ─── 分隔线 ─── */
   .divider {{
     border: none;
-    border-top: 1px solid #e4d9bf;
+    border-top: 1px solid {THEME_LINE};
     margin: 28px 0;
   }}
 
   /* ─── 顶部栏（Topbar）────────────────────────────────────────── */
   .topbar {{
-    background: linear-gradient(135deg, #DB0007, #a8001a);
+    background: linear-gradient(135deg, #DB0007, {MCD_DARK_RED});
     border-bottom: 3px solid #FFBC0D;
     display: flex;
     align-items: center;
@@ -267,7 +267,7 @@ def get_css() -> str:
     z-index: 90;
     background: rgba(255,253,248,.96);
     backdrop-filter: blur(6px);
-    border-bottom: 1px solid #e4d9bf;
+    border-bottom: 1px solid {THEME_LINE};
     display: flex;
     flex-wrap: wrap;
     gap: 4px;
@@ -279,7 +279,7 @@ def get_css() -> str:
   .nav-bar a.nav-link:active {{
     font-size: 11.5px !important;
     font-weight: 700 !important;
-    color: #5a5048 !important;
+    color: {THEME_INK2} !important;
     background: transparent !important;
     padding: 4px 11px !important;
     border-radius: 16px !important;
