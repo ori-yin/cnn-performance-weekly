@@ -51,8 +51,8 @@ def _parse_message_content(raw):
     return title, text
 
 
-def _plan_card_html(row: pd.Series, rank: int, is_good: bool) -> str:
-    """生成单个 Plan 卡片的 HTML"""
+def _plan_card_html(row: pd.Series, rank: int, is_good: bool, ai_result: dict = None) -> str:
+    """生成单个 Plan 卡片的 HTML，可选 AI 解读"""
     medal_map = {1: "🥇", 2: "🥈", 3: "🥉"}
     medal = medal_map.get(rank, f'<span style="color:#999;font-size:11px;">{rank}.</span>')
 
@@ -112,11 +112,37 @@ def _plan_card_html(row: pd.Series, rank: int, is_good: bool) -> str:
         f'<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">'
         f'{metrics_html}'
         f'</div>'
+        f'{_ai_inline_html(ai_result)}'
         f'</div>'
     )
 
 
-def render(df: pd.DataFrame):
+def _ai_inline_html(ai_result: dict = None) -> str:
+    """生成卡片内 AI 解读折叠区域 HTML"""
+    if not ai_result:
+        return ""
+    if "error" in ai_result:
+        return (
+            f'<details style="margin-top:8px;">'
+            f'<summary style="font-size:12px;font-weight:600;color:#c00;cursor:pointer;">⚠ AI 解读失败</summary>'
+            f'<div style="background:#F8F7F5;border-radius:6px;padding:10px 12px;margin-top:4px;">'
+            f'<div style="font-size:12px;color:#c00;">{ai_result["error"]}</div>'
+            f'</div></details>'
+        )
+    return (
+        f'<details style="margin-top:8px;">'
+        f'<summary style="font-size:12px;font-weight:600;color:#a8001a;cursor:pointer;">✨ AI 解读</summary>'
+        f'<div style="background:#F8F7F5;border-radius:6px;padding:10px 12px;margin-top:4px;">'
+        f'<div style="font-size:12px;color:#5a5048;line-height:1.7;">'
+        f'归因：{ai_result.get("rank_factor", "—")}<br>'
+        f'亮点：{ai_result.get("highlight", "—")}<br>'
+        f'短板：{ai_result.get("weakness", "—")}<br>'
+        f'建议：{ai_result.get("suggestion", "—")}'
+        f'</div></div></details>'
+    )
+
+
+def render(df: pd.DataFrame, ai_results: dict = None):
     """渲染 Plan 分析层，返回 plan_html 供导出用"""
 
     st.markdown(section_header("Plan 分析", ""), unsafe_allow_html=True)
@@ -179,10 +205,14 @@ def render(df: pd.DataFrame):
         rows_list = list(top6.iterrows())
         with col_l:
             for i, (_, row) in enumerate(rows_list[:3], 1):
-                st.markdown(_plan_card_html(row, i, is_good=True), unsafe_allow_html=True)
+                ai_key = f"{row['Plan ID']}_{ch}"
+                ai = ai_results.get(ai_key) if ai_results else None
+                st.markdown(_plan_card_html(row, i, is_good=True, ai_result=ai), unsafe_allow_html=True)
         with col_r:
             for i, (_, row) in enumerate(rows_list[3:6], 4):
-                st.markdown(_plan_card_html(row, i, is_good=True), unsafe_allow_html=True)
+                ai_key = f"{row['Plan ID']}_{ch}"
+                ai = ai_results.get(ai_key) if ai_results else None
+                st.markdown(_plan_card_html(row, i, is_good=True, ai_result=ai), unsafe_allow_html=True)
 
         # ─── 导出 HTML ──────────────────────────────────────
         plan_html += f'<div class="section-subheader">{ch}</div>'

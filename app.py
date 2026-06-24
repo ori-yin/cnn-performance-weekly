@@ -8,7 +8,7 @@ from pathlib import Path
 import streamlit as st
 from datetime import date, timedelta
 
-from config import MCD_RED, MCD_GOLD
+from config import MCD_RED, MCD_GOLD, API_PROVIDERS, CHANNELS
 from data import read_data, filter_week_data
 from scoring import compute_scores
 from styles import get_css
@@ -17,6 +17,7 @@ from tabs.tab_operational import render as render_operational
 from tabs.tab_bu import render as render_bu
 from tabs.tab_plan import render as render_plan
 from export import generate_html
+from llm_service import analyze_content
 
 
 def render_topbar():
@@ -196,6 +197,88 @@ def main():
         st.warning("筛选后无数据，请调整筛选条件")
         return
 
+    # ─── 侧边栏：AI 配置（折叠）─────────────────────────────
+    with st.sidebar:
+        st.markdown("---")
+        with st.expander("AI 解读配置", expanded=False):
+            ai_provider = st.selectbox("AI 服务商", options=list(API_PROVIDERS.keys()), index=0)
+            ai_models = API_PROVIDERS[ai_provider]["models"]
+            ai_model = st.selectbox("模型", options=ai_models, index=0)
+            ai_api_key = st.text_input(
+                "API Key",
+                value=API_PROVIDERS[ai_provider].get("api_key", ""),
+                type="password",
+            )
+
+        if st.button("✨ AI 分析", use_container_width=True):
+            # 按渠道分批，每批最多6条
+            df_ai = df.copy()
+            if "消息内容" in df_ai.columns:
+                from tabs.tab_plan import _parse_message_content
+                parsed = df_ai["消息内容"].apply(_parse_message_content)
+                df_ai["消息标题"] = parsed.apply(lambda x: x[0])
+                df_ai["消息内容_parsed"] = parsed.apply(lambda x: x[1])
+
+            ai_results = st.session_state.get("ai_results", {})
+            ch_count = 0
+
+            for ch in CHANNELS:
+                ch_df = df_ai[df_ai["渠道"] == ch]
+                if len(ch_df) < 2:
+                    continue
+                agg = {
+                    "Plan名称": "first",
+                    "触达成功": "sum",
+                    "点击人次": "sum",
+                    "订单GC": "sum",
+                    "综合评分": "mean",
+                    "CTR": "mean",
+                    "GC转化率": "mean",
+                    "消息标题": "first",
+                }
+                if "消息内容_parsed" in ch_df.columns:
+                    agg["消息内容_parsed"] = "first"
+                elif "消息内容" in ch_df.columns:
+                    agg["消息内容"] = "first"
+                if "订单Sales" in ch_df.columns:
+                    agg["订单Sales"] = "sum"
+
+                plan_agg = ch_df.groupby("Plan ID").agg(agg).reset_index()
+                plan_agg = plan_agg[plan_agg["触达成功"] > 0]
+                if len(plan_agg) < 2:
+                    continue
+                plan_agg = plan_agg.sort_values("综合评分", ascending=False).head(6)
+
+                items = []
+                keys = []
+                for rank, (_, row) in enumerate(plan_agg.iterrows(), 1):
+                    msg_col = "消息内容_parsed" if "消息内容_parsed" in row.index else "消息内容"
+                    content = str(row.get(msg_col, "")).strip() if msg_col in row.index else ""
+                    items.append({
+                        "标题": str(row.get("消息标题", "")),
+                        "内容": content[:200],
+                        "渠道": ch,
+                        "触达成功": int(row["触达成功"]),
+                        "点击人次": int(row["点击人次"]),
+                        "CTR": float(row["CTR"]),
+                        "订单GC": int(row["订单GC"]),
+                        "订单GC转化率": float(row["GC转化率"]),
+                        "综合评分": float(row["综合评分"]),
+                        "排名": rank,
+                    })
+                    keys.append(f"{row['Plan ID']}_{ch}")
+
+                with st.spinner(f"AI 正在分析 {ch}（{len(items)} 条）..."):
+                    results = analyze_content(ai_api_key, ai_provider, ai_model, items)
+                ai_results.update(dict(zip(keys, results)))
+                ch_count += 1
+
+            if ch_count > 0:
+                st.session_state["ai_results"] = ai_results
+                st.rerun()
+            else:
+                st.warning("没有可分析的 Plan 数据")
+
     # ─── 主体内容（单页滚动，4个 section）─────────────────────
     st.markdown('<div id="sec-summary"></div>', unsafe_allow_html=True)
     summary_figs, summary_kpis = render_summary(df, target_dau)
@@ -210,7 +293,8 @@ def main():
 
     st.markdown('<hr class="divider">', unsafe_allow_html=True)
     st.markdown('<div id="sec-plan"></div>', unsafe_allow_html=True)
-    plan_html = render_plan(df)
+    ai_results = st.session_state.get("ai_results", {})
+    plan_html = render_plan(df, ai_results=ai_results)
 
     # ─── 导出 HTML 按钮 ──────────────────────────────────────
     with st.sidebar:
