@@ -263,6 +263,38 @@ def _get_css() -> str:
   }
   .plan-card .plan-msg-text { color: #666; }
 
+  /* ─── Plan Tab 切换（纯 CSS，支持双层嵌套）─── */
+  .plan-ch-tabs, .plan-dim-tabs { margin-bottom: 16px; }
+  .plan-ch-input, .plan-dim-input { display: none; }
+  .plan-tab-label {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink2);
+    padding: 5px 14px;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: .15s;
+    margin-right: 4px;
+    margin-bottom: 4px;
+  }
+  .plan-tab-label:hover { background: #fde9ea; color: var(--mcd-red); }
+  .plan-ch-input:checked + .plan-tab-label,
+  .plan-dim-input:checked + .plan-tab-label {
+    background: var(--mcd-red);
+    color: #fff;
+  }
+  .plan-ch-panel, .plan-dim-panel { display: none; }
+  /* 渠道：第N个radio checked → 第N个panel显示 */
+  .plan-ch-input:nth-of-type(1):checked ~ .plan-ch-panel:nth-of-type(1),
+  .plan-ch-input:nth-of-type(2):checked ~ .plan-ch-panel:nth-of-type(2),
+  .plan-ch-input:nth-of-type(3):checked ~ .plan-ch-panel:nth-of-type(3),
+  .plan-ch-input:nth-of-type(4):checked ~ .plan-ch-panel:nth-of-type(4) { display: block; }
+  /* 维度：同理 */
+  .plan-dim-input:nth-of-type(1):checked ~ .plan-dim-panel:nth-of-type(1),
+  .plan-dim-input:nth-of-type(2):checked ~ .plan-dim-panel:nth-of-type(2),
+  .plan-dim-input:nth-of-type(3):checked ~ .plan-dim-panel:nth-of-type(3) { display: block; }
+
   /* ─── AI 折叠 ─── */
   details { margin-top: 8px; }
   details summary {

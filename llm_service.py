@@ -57,7 +57,7 @@ def build_analysis_prompt(items: list) -> str:
 
 {ANALYSIS_DIMENSIONS}
 
-每条内容请输出以下4个字段（每个字段15字以内）：
+每条内容请输出以下4个字段（每个字段70字左右）：
 - "rank_factor": 核心归因（为什么排名靠前/靠后）
 - "highlight": 亮点
 - "weakness": 短板

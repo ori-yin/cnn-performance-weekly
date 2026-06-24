@@ -198,6 +198,30 @@ def _export_plan_cards(top6: pd.DataFrame, ch: str, ai_results: dict = None) -> 
     return html
 
 
+def _export_channel_tabs(ch: str, plan_agg: pd.DataFrame, ai_results: dict = None) -> str:
+    """导出 HTML：单个渠道的 3 个维度 tab 切换"""
+    prefix = ch.replace(" ", "-").replace("/", "-")
+    dims = [
+        ("score", "综合评分", "综合评分"),
+        ("ctr", "CTR", "CTR"),
+        ("sales", "Sales", "订单Sales"),
+    ]
+    tabs_html = ""
+    panels_html = ""
+    for idx, (dim_id, label, sort_col) in enumerate(dims):
+        checked = "checked" if idx == 0 else ""
+        tabs_html += (
+            f'<input type="radio" name="dim-{prefix}" id="dim-{prefix}-{dim_id}" {checked} class="plan-dim-input">'
+            f'<label for="dim-{prefix}-{dim_id}" class="plan-tab-label">{label}</label>'
+        )
+        if sort_col in plan_agg.columns:
+            sorted_df = plan_agg.sort_values(sort_col, ascending=False).head(6).reset_index(drop=True)
+        else:
+            sorted_df = plan_agg.sort_values("综合评分", ascending=False).head(6).reset_index(drop=True)
+        panels_html += f'<div class="plan-dim-panel">{_export_plan_cards(sorted_df, ch, ai_results)}</div>'
+    return f'<div class="plan-dim-tabs">{tabs_html}{panels_html}</div>'
+
+
 def render(df: pd.DataFrame, ai_results: dict = None):
     """渲染 Plan 分析层，返回 plan_html 供导出用"""
 
@@ -257,14 +281,19 @@ def render(df: pd.DataFrame, ai_results: dict = None):
     # ─── Streamlit 显示 ──────────────────────────────────
     _render_plan_cards(top6, selected_ch, ai_results)
 
-    # ─── 导出 HTML（所有渠道，按评分排序）─────────────────
+    # ─── 导出 HTML（渠道 tab + 维度 tab，扁平结构）──────────
     plan_html = ""
-    for ch in available_channels:
+    ch_tabs = ""
+    ch_panels = ""
+    for idx, ch in enumerate(available_channels):
         ch_df_exp = df[df["渠道"] == ch].copy()
         plan_agg_exp = _aggregate_plans(ch_df_exp)
-        plan_agg_exp = plan_agg_exp.sort_values("综合评分", ascending=False)
-        top6_exp = plan_agg_exp.head(6).reset_index(drop=True)
-        plan_html += f'<div class="section-subheader">{ch}</div>'
-        plan_html += _export_plan_cards(top6_exp, ch, ai_results)
+        checked = "checked" if idx == 0 else ""
+        ch_tabs += (
+            f'<input type="radio" name="plan-ch" id="plan-ch-{idx}" {checked} class="plan-ch-input">'
+            f'<label for="plan-ch-{idx}" class="plan-tab-label">{ch}</label>'
+        )
+        ch_panels += f'<div class="plan-ch-panel">{_export_channel_tabs(ch, plan_agg_exp, ai_results)}</div>'
+    plan_html += f'<div class="plan-ch-tabs">{ch_tabs}{ch_panels}</div>'
 
     return plan_html
