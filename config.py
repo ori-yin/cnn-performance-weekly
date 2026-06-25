@@ -59,13 +59,13 @@ CTR_THRESHOLDS = {
     "APP Push": 0.24,
     "企微1v1": 1.62,
     "微信小程序订阅消息": 4.01,
-    # "短信": 0.46,
+    "短信": 0.46,
 }
 GC_THRESHOLDS = {
     "APP Push": 69.5,
     "企微1v1": 18.5,
     "微信小程序订阅消息": 41.0,
-    # "短信": 26.7,
+    "短信": 26.7,
 }
 CTR_UNKNOWN_THRESHOLD = 2.85
 GC_UNKNOWN_THRESHOLD = 34.8
@@ -83,8 +83,7 @@ CONFIDENCE_THRESHOLDS = [
 CONFIDENCE_DEFAULT = 1.0
 
 # ─── 渠道列表 ──────────────────────────────────────────────
-CHANNELS = ["APP Push", "企微1v1", "微信小程序订阅消息"]
-# CHANNELS = ["APP Push", "企微1v1", "短信", "微信小程序订阅消息"]  # 短信暂不使用，领导要求保留备用
+CHANNELS = ["APP Push", "企微1v1", "短信", "微信小程序订阅消息"]
 
 # ─── 编码尝试顺序 ──────────────────────────────────────────────
 ENCODINGS = ["utf-8", "utf-8-sig", "gbk", "gb2312", "latin1"]

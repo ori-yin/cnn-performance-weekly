@@ -10,6 +10,9 @@ import pandas as pd
 from config import MCD_RED, MCD_GOLD, MCD_GREEN, CHANNELS
 from components import section_header
 
+# Plan分析渠道列表（排除短信，领导要求保留备用）
+PLAN_CHANNELS = [ch for ch in CHANNELS if ch != "短信"]
+
 
 def _parse_message_content(raw):
     """
@@ -244,7 +247,7 @@ def render(df: pd.DataFrame, ai_results: dict = None):
 
     # 检测可用渠道（至少 2 条 Plan）
     available_channels = []
-    for ch in CHANNELS:
+    for ch in PLAN_CHANNELS:
         ch_df = df[df["渠道"] == ch]
         if len(ch_df) >= 2:
             plan_agg = _aggregate_plans(ch_df)
