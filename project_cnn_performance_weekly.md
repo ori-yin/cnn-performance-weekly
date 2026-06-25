@@ -10,7 +10,7 @@ metadata:
 # CNN Performance Weekly 周度数据复盘看板
 
 **项目路径**：`C:\Users\a952462\cnn-performance-weekly`
-**当前版本**：`af2d2ee`（2026-06-25）
+**当前版本**：`ed36387`（2026-06-25）
 **运行端口**：8503（`streamlit run app.py --server.port 8503`）
 
 ## 架构
