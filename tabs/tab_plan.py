@@ -9,6 +9,7 @@ import streamlit as st
 import pandas as pd
 from config import MCD_RED, MCD_GOLD, MCD_GREEN, CHANNELS
 from components import section_header
+from llm_service import analyze_channel_summary
 
 # Plan分析渠道列表（排除短信，领导要求保留备用）
 PLAN_CHANNELS = [ch for ch in CHANNELS if ch != "短信"]
@@ -240,9 +241,34 @@ def _export_plan_cards(top_n: pd.DataFrame, ch: str, dim_id: str = "score", ai_r
     return html
 
 
-def _export_channel_tabs(ch: str, plan_agg: pd.DataFrame, ai_results: dict = None) -> str:
+def _export_channel_tabs(ch: str, plan_agg: pd.DataFrame, ai_results: dict = None, ch_summary: dict = None) -> str:
     """导出 HTML：单个渠道的 3 个维度 tab 切换"""
     prefix = ch.replace(" ", "-").replace("/", "-")
+
+    # 渠道总结
+    summary_html = ""
+    if ch_summary and "error" not in ch_summary:
+        why_good = ch_summary.get("why_good", "")
+        content_framework = ch_summary.get("content_framework", "")
+        if why_good or content_framework:
+            summary_html = '<div style="background:#fffdf8;border:1px solid #e4d9bf;border-radius:10px;padding:16px;margin:12px 0;">'
+            summary_html += '<div style="font-size:13px;font-weight:700;color:#a8001a;margin-bottom:10px;">📊 渠道总结</div>'
+            if why_good:
+                summary_html += (
+                    f'<div style="margin-bottom:10px;">'
+                    f'<div style="font-size:12px;font-weight:600;color:#5a5048;margin-bottom:4px;">✨ 为什么好</div>'
+                    f'<div style="font-size:12px;color:#2b2620;line-height:1.7;">{why_good}</div>'
+                    f'</div>'
+                )
+            if content_framework:
+                summary_html += (
+                    f'<div>'
+                    f'<div style="font-size:12px;font-weight:600;color:#5a5048;margin-bottom:4px;">📐 内容框架</div>'
+                    f'<div style="font-size:13px;font-weight:700;color:#a8001a;">{content_framework}</div>'
+                    f'</div>'
+                )
+            summary_html += '</div>'
+
     dims = [
         ("score", "综合评分", "综合评分"),
         ("ctr", "CTR", "CTR"),
@@ -262,10 +288,44 @@ def _export_channel_tabs(ch: str, plan_agg: pd.DataFrame, ai_results: dict = Non
         else:
             sorted_df = plan_agg.sort_values("综合评分", ascending=False).head(20).reset_index(drop=True)
         panels_html += f'<div class="plan-dim-panel">{_export_plan_cards(sorted_df, ch, dim_id, ai_results)}</div>'
-    return f'<div class="plan-dim-tabs">{tabs_html}{panels_html}</div>'
+    return f'{summary_html}<div class="plan-dim-tabs">{tabs_html}{panels_html}</div>'
 
 
-def render(df: pd.DataFrame, ai_results: dict = None):
+def _channel_summary_html(summary: dict) -> str:
+    """生成渠道总结 HTML"""
+    if not summary or "error" in summary:
+        return ""
+
+    why_good = summary.get("why_good", "")
+    content_framework = summary.get("content_framework", "")
+
+    if not why_good and not content_framework:
+        return ""
+
+    html = '<div style="background:#fffdf8;border:1px solid #e4d9bf;border-radius:10px;padding:16px;margin:12px 0;">'
+    html += '<div style="font-size:13px;font-weight:700;color:#a8001a;margin-bottom:10px;">📊 渠道总结</div>'
+
+    if why_good:
+        html += (
+            f'<div style="margin-bottom:10px;">'
+            f'<div style="font-size:12px;font-weight:600;color:#5a5048;margin-bottom:4px;">✨ 为什么好</div>'
+            f'<div style="font-size:12px;color:#2b2620;line-height:1.7;">{why_good}</div>'
+            f'</div>'
+        )
+
+    if content_framework:
+        html += (
+            f'<div>'
+            f'<div style="font-size:12px;font-weight:600;color:#5a5048;margin-bottom:4px;">📐 内容框架</div>'
+            f'<div style="font-size:13px;font-weight:700;color:#a8001a;">{content_framework}</div>'
+            f'</div>'
+        )
+
+    html += '</div>'
+    return html
+
+
+def render(df: pd.DataFrame, ai_results: dict = None, channel_summary: dict = None):
     """渲染 Plan 分析层，返回 plan_html 供导出用"""
 
     st.markdown(section_header("Plan 分析", ""), unsafe_allow_html=True)
@@ -310,6 +370,12 @@ def render(df: pd.DataFrame, ai_results: dict = None):
             st.session_state["deleted_plans"] = set()
             st.rerun()
 
+    # ─── 渠道总结（在渠道筛选下方）──────────────────────────
+    if channel_summary and selected_ch in channel_summary:
+        summary_html = _channel_summary_html(channel_summary[selected_ch])
+        if summary_html:
+            st.markdown(summary_html, unsafe_allow_html=True)
+
     # 按选中维度排序
     ch_df = df[df["渠道"] == selected_ch].copy()
     plan_agg = _aggregate_plans(ch_df)
@@ -346,7 +412,8 @@ def render(df: pd.DataFrame, ai_results: dict = None):
             f'<input type="radio" name="plan-ch" id="plan-ch-{idx}" {checked} class="plan-ch-input">'
             f'<label for="plan-ch-{idx}" class="plan-tab-label">{ch}</label>'
         )
-        ch_panels += f'<div class="plan-ch-panel">{_export_channel_tabs(ch, plan_agg_exp, ai_results)}</div>'
+        ch_summary = channel_summary.get(ch) if channel_summary else None
+        ch_panels += f'<div class="plan-ch-panel">{_export_channel_tabs(ch, plan_agg_exp, ai_results, ch_summary)}</div>'
     plan_html += f'<div class="plan-ch-tabs">{ch_tabs}{ch_panels}</div>'
 
     return plan_html

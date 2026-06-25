@@ -18,7 +18,7 @@ from tabs.tab_operational import render as render_operational
 from tabs.tab_bu import render as render_bu
 from tabs.tab_plan import render as render_plan
 from export import generate_html
-from llm_service import analyze_content
+from llm_service import analyze_content, analyze_channel_summary
 
 
 def render_topbar():
@@ -221,6 +221,7 @@ def main():
                 df_ai["消息内容_parsed"] = parsed.apply(lambda x: x[1])
 
             ai_results = st.session_state.get("ai_results", {})
+            channel_summary = st.session_state.get("channel_summary", {})
             ch_count = 0
 
             # 3个排序维度
@@ -260,6 +261,26 @@ def main():
                 deleted = st.session_state.get("deleted_plans", set())
                 plan_agg = plan_agg[~plan_agg["Plan ID"].isin(deleted)]
 
+                # 渠道总结：取综合评分TOP4
+                summary_top = plan_agg.sort_values("综合评分", ascending=False).head(4)
+                summary_items = []
+                for _, row in summary_top.iterrows():
+                    msg_col = "消息内容_parsed" if "消息内容_parsed" in row.index else "消息内容"
+                    content = str(row.get(msg_col, "")).strip() if msg_col in row.index else ""
+                    summary_items.append({
+                        "标题": str(row.get("消息标题", "")),
+                        "内容": content[:200],
+                        "触达成功": int(row["触达成功"]),
+                        "CTR": float(row["CTR"]),
+                        "订单GC": int(row["订单GC"]),
+                        "订单Sales": float(row.get("订单Sales", 0)),
+                        "综合评分": float(row["综合评分"]),
+                    })
+
+                with st.spinner(f"AI 正在生成 {ch} 渠道总结..."):
+                    ch_summary = analyze_channel_summary(ai_api_key, ai_provider, ai_model, ch, summary_items)
+                channel_summary[ch] = ch_summary
+
                 for dim_id, sort_col in DIMS:
                     if sort_col in plan_agg.columns:
                         dim_top = plan_agg.sort_values(sort_col, ascending=False).head(4)
@@ -292,6 +313,7 @@ def main():
 
             if ch_count > 0:
                 st.session_state["ai_results"] = ai_results
+                st.session_state["channel_summary"] = channel_summary
                 st.rerun()
             else:
                 st.warning("没有可分析的 Plan 数据")
@@ -311,7 +333,8 @@ def main():
     st.markdown('<hr class="divider">', unsafe_allow_html=True)
     st.markdown('<div id="sec-plan"></div>', unsafe_allow_html=True)
     ai_results = st.session_state.get("ai_results", {})
-    plan_html = render_plan(df, ai_results=ai_results)
+    channel_summary = st.session_state.get("channel_summary", {})
+    plan_html = render_plan(df, ai_results=ai_results, channel_summary=channel_summary)
 
     # ─── 导出 HTML 按钮 ──────────────────────────────────────
     with st.sidebar:
@@ -333,7 +356,7 @@ def main():
             "plan": plan_html,
         }
 
-        html_content = generate_html(df, target_dau, figs, tables, kpis, period_str=f"{start_date} ~ {end_date}")
+        html_content = generate_html(df, target_dau, figs, tables, kpis, period_str=f"{start_date} ~ {end_date}", channel_summary=channel_summary)
         today_str = date.today().strftime("%Y%m%d")
         st.download_button(
             label="下载 HTML 看板",

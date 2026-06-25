@@ -421,7 +421,7 @@ def _render_section(num: int, title: str, content: str) -> str:
 """
 
 
-def generate_html(df, target: int, figs: dict, tables: dict, kpis: dict, period_str: str = "") -> str:
+def generate_html(df, target: int, figs: dict, tables: dict, kpis: dict, period_str: str = "", channel_summary: dict = None) -> str:
     """
     生成完整的 HTML 文件。
 
@@ -432,6 +432,7 @@ def generate_html(df, target: int, figs: dict, tables: dict, kpis: dict, period_
         tables: 各 tab 的表格 HTML 字典
         kpis: 各 tab 的 KPI 数据字典
         period_str: 日期范围显示文本
+        channel_summary: 渠道总结字典
     """
     if not period_str:
         period_str = date.today().strftime("%Y-%m-%d")

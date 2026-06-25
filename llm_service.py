@@ -155,3 +155,60 @@ def analyze_content(api_key: str, provider: str, model: str, items: list) -> lis
         return [{"error": f"JSON解析失败: {str(e)[:50]}"}] * len(items)
     except Exception as e:
         return [{"error": f"API调用失败: {str(e)[:80]}"}] * len(items)
+
+
+def build_channel_summary_prompt(channel: str, items: list) -> str:
+    """构建渠道总结 prompt"""
+    lines = []
+    for i, item in enumerate(items, 1):
+        lines.append(
+            f"【{i}】标题：{item['标题']}"
+            f"｜正文：{item['内容']}"
+            f"｜触达：{item['触达成功']}"
+            f"｜CTR：{item['CTR']:.2f}%"
+            f"｜GC：{item['订单GC']}"
+            f"｜Sales：{item['订单Sales']}"
+            f"｜综合评分：{item['综合评分']:.2f}"
+        )
+
+    return f"""你是麦当劳中国内容营销分析专家。请对以下 {channel} 渠道的 TOP4 Plan 进行渠道级总结分析。
+
+{chr(10).join(lines)}
+
+请从以下两个维度进行总结：
+
+1. **为什么好**（30-50字）：
+- 抽象这4条内容的共同成功因素
+- 它们在文案策略、人群定位、利益点设计、场景感等方面有什么共性
+- 为什么这些因素能带来好的数据表现
+
+2. **内容框架**（格式：XX+XX+XX）：
+- 从这4条内容中提炼出可复用的内容框架模板
+- 用3-4个关键词概括框架要素（如：强利益点+场景化+紧迫感）
+- 这个框架可以指导后续在该渠道的内容创作
+
+严格输出 JSON 对象，不要输出其他任何文字、不要用markdown代码块：
+{{
+  "why_good": "为什么好的总结",
+  "content_framework": "XX+XX+XX"
+}}"""
+
+
+def analyze_channel_summary(api_key: str, provider: str, model: str, channel: str, items: list) -> dict:
+    """渠道总结分析，返回结构化结果"""
+    if not api_key:
+        return {"error": "请先填写 API Key"}
+
+    prompt = build_channel_summary_prompt(channel, items)
+
+    try:
+        result = call_llm(api_key, provider, model, prompt)
+        # call_llm 返回的是列表，取第一个
+        if isinstance(result, list) and len(result) > 0:
+            return result[0]
+        elif isinstance(result, dict):
+            return result
+        else:
+            return {"error": "AI返回格式异常"}
+    except Exception as e:
+        return {"error": f"API调用失败: {str(e)[:80]}"}
