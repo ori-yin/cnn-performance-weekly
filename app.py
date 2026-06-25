@@ -247,7 +247,7 @@ def main():
                 plan_agg = plan_agg[plan_agg["触达成功"] > 0]
                 if len(plan_agg) < 2:
                     continue
-                plan_agg = plan_agg.sort_values("综合评分", ascending=False).head(6)
+                plan_agg = plan_agg.sort_values("综合评分", ascending=False).head(4)
 
                 items = []
                 keys = []
