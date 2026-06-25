@@ -31,7 +31,11 @@ def kpi_card(label: str, value, sub: str = "", status: str = "", unit: str = "")
     - unit: 数值单位（如 "%"），传入时格式化为百分比
     """
     status_class = status if status in ("green", "yellow", "red") else ""
-    if unit:
+
+    # Target 为 0 时显示 "/"
+    if isinstance(value, (int, float)) and value == 0 and "Target" in label:
+        val_str = "/"
+    elif unit:
         val_str = _fmt_number(value, unit=unit)
     elif isinstance(value, (int, float)):
         val_str = _fmt_number(value)
