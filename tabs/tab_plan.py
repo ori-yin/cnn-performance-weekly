@@ -134,10 +134,10 @@ def _ai_inline_html(ai_result: dict = None) -> str:
         f'<summary style="font-size:12px;font-weight:600;color:#a8001a;cursor:pointer;">✨ AI 解读</summary>'
         f'<div style="background:#F8F7F5;border-radius:6px;padding:10px 12px;margin-top:4px;">'
         f'<div style="font-size:12px;color:#5a5048;line-height:1.7;">'
-        f'归因：{ai_result.get("rank_factor", "—")}<br>'
-        f'亮点：{ai_result.get("highlight", "—")}<br>'
-        f'短板：{ai_result.get("weakness", "—")}<br>'
-        f'建议：{ai_result.get("suggestion", "—")}'
+        f'核心亮点/问题：{ai_result.get("core_issue", "—")}<br>'
+        f'可借鉴点：{ai_result.get("highlight", "—")}<br>'
+        f'改进方向：{ai_result.get("weakness", "—")}<br>'
+        f'可复用/可优化：{ai_result.get("action", "—")}'
         f'</div></div></details>'
     )
 
