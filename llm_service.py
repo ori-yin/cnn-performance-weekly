@@ -62,6 +62,57 @@ def build_analysis_prompt(items: list) -> str:
 {chr(10).join(lines)}"""
 
 
+def _extract_json_robust(raw: str) -> list:
+    """
+    稳健的 JSON 提取：先尝试标准解析，失败后用正则逐条提取
+    """
+    # 清理 markdown 代码块
+    raw = re.sub(r"^```(?:json)?\s*", "", raw)
+    raw = re.sub(r"\s*```$", "", raw)
+    # 尝试提取 JSON 数组
+    match = re.search(r"\[.*\]", raw, re.DOTALL)
+    if match:
+        raw = match.group(0)
+
+    # 方案1：dirtyjson 解析
+    try:
+        result = dirtyjson.loads(raw)
+        if isinstance(result, list):
+            return result
+    except Exception:
+        pass
+
+    # 方案2：标准 json 解析
+    try:
+        result = json.loads(raw)
+        if isinstance(result, list):
+            return result
+    except Exception:
+        pass
+
+    # 方案3：正则逐条提取 {"key": "value", ...}
+    items = re.findall(r'\{[^{}]*\}', raw)
+    results = []
+    for item_str in items:
+        item = {}
+        # 提取每个 key-value 对
+        pairs = re.findall(r'"(\w+)"\s*:\s*"((?:[^"\\]|\\.)*)"', item_str)
+        for key, value in pairs:
+            item[key] = value
+        # 也尝试提取空字符串的情况
+        pairs_empty = re.findall(r'"(\w+)"\s*:\s*""', item_str)
+        for key, _ in pairs_empty:
+            if key not in item:
+                item[key] = ""
+        if item:
+            results.append(item)
+    if results:
+        return results
+
+    # 方案4：终极兜底 - 返回空列表
+    return []
+
+
 def call_llm(api_key: str, provider: str, model: str, prompt: str) -> list:
     """调用 LLM API 并返回解析后的结果"""
     provider_config = API_PROVIDERS.get(provider)
@@ -78,20 +129,7 @@ def call_llm(api_key: str, provider: str, model: str, prompt: str) -> list:
         max_tokens=4000,
     )
     raw = resp.choices[0].message.content.strip()
-    # 清理 markdown 代码块
-    raw = re.sub(r"^```(?:json)?\s*", "", raw)
-    raw = re.sub(r"\s*```$", "", raw)
-    # 尝试提取 JSON 数组
-    match = re.search(r"\[.*\]", raw, re.DOTALL)
-    if match:
-        raw = match.group(0)
-    # 使用 dirtyjson 解析（容忍未转义引号、trailing comma、单引号等）
-    try:
-        result = dirtyjson.loads(raw)
-        return result
-    except Exception:
-        # 兜底：尝试标准 json 解析
-        return json.loads(raw)
+    return _extract_json_robust(raw)
 
 
 def analyze_content(api_key: str, provider: str, model: str, items: list) -> list:
