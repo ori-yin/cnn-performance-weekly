@@ -370,7 +370,11 @@ def _render_nav() -> str:
 def _render_kpi_card(label: str, value, sub: str = "", status: str = "", unit: str = "") -> str:
     """渲染 KPI 卡片"""
     status_cls = f" {status}" if status else ""
-    if isinstance(value, (int, float)):
+
+    # Target 为 0 时显示 "/"
+    if isinstance(value, (int, float)) and value == 0 and "Target" in label:
+        value_str = "/"
+    elif isinstance(value, (int, float)):
         value_str = _fmt_number(value, unit=unit)
     else:
         value_str = str(value)
