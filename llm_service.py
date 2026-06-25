@@ -9,25 +9,23 @@ import openai
 from config import API_PROVIDERS
 
 
-ANALYSIS_DIMENSIONS = """请从以下4个维度逐条分析：
+ANALYSIS_DIMENSIONS = """请从以下3个维度逐条分析：
 
-1. 核心亮点/问题
-- 这条文案表现好（或不好）的主要原因是什么？
-- 是文案吸引力、人群匹配度、利益点强度，还是数据承接能力？
+1. 核心亮点：
+- 这条文案表现好的主要原因是什么？
+- 是文案吸引力、人群匹配度、利益点强度，还是后续的落地页转化能力（落地页转化能力需要同步考虑GC、Sales，要注意那些CTR点击高但转化低的内容）？
 
-2. 可借鉴点（表现好时）
+2. 可借鉴点
 - 标题是否直接表达利益点？
 - 是否有场景感（早餐、午餐、下午茶、晚餐、周末、会员日）？
 - 是否有紧迫感（今日限定、最后一天、限时、即将结束）？
 - 人群匹配是否精准（内容—人群—场景一致）？
+- 以及是否可以沉淀出可复用的模板供后续投放
 
-3. 改进方向（表现差时）
-- 最值得尝试的一个改动方向是什么？
-- 是标题吸引力不足、利益点不清晰、人群不匹配，还是落地页承接差？
-
-4. 可复用/可优化
-- 如果表现好，哪个点值得借鉴复用？
-- 如果表现差，最值得尝试的一个改动方向是什么？"""
+3. 可优化（不作为必须输出项）
+- 客观审视这条内容是否还有优化提升的空间，不作为必须输出项
+- 如果有，则输出这条内容还可以在哪些方面改进？比如CTR点击高但转化低，是不是需要优化落地页体验等
+- 基于各项数据结果以及具体的内容文案本身做分析"""
 
 
 def build_analysis_prompt(items: list) -> str:
@@ -51,11 +49,10 @@ def build_analysis_prompt(items: list) -> str:
 
 {ANALYSIS_DIMENSIONS}
 
-每条内容请输出以下4个字段（每个字段50字左右）：
-- "core_issue": 核心亮点/问题（表现好/不好的主要原因）
-- "highlight": 可借鉴点（表现好时值得借鉴的点）
-- "weakness": 改进方向（表现差时最值得尝试的改动）
-- "action": 可复用/可优化（具体行动建议）
+每条内容请输出以下字段（每个字段30字左右）：
+- "highlight": 核心亮点（表现好的主要原因）
+- "reference": 可借鉴点（值得借鉴复用的点，或可沉淀的模板）
+- "optimize": 可优化（可选，如有优化空间则输出，无则输出空字符串）
 
 严格输出 JSON 数组，不要输出其他任何文字、不要用markdown代码块。共{len(items)}条：
 {chr(10).join(lines)}"""
@@ -111,7 +108,7 @@ def analyze_content(api_key: str, provider: str, model: str, items: list) -> lis
         if not isinstance(results, list):
             results = [results]
         # 补齐或截断
-        default = {"core_issue": "—", "highlight": "—", "weakness": "—", "action": "—"}
+        default = {"highlight": "—", "reference": "—", "optimize": ""}
         results = (results + [default] * len(items))[:len(items)]
         for r in results:
             for k, v in default.items():

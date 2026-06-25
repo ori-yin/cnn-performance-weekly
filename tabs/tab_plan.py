@@ -132,15 +132,21 @@ def _ai_inline_html(ai_result: dict = None) -> str:
             f'<div style="font-size:12px;color:#c00;">{ai_result["error"]}</div>'
             f'</div></details>'
         )
+    # 构建AI解读内容
+    content_parts = []
+    content_parts.append(f'核心亮点：{ai_result.get("highlight", "—")}')
+    content_parts.append(f'可借鉴点：{ai_result.get("reference", "—")}')
+    optimize = ai_result.get("optimize", "")
+    if optimize:
+        content_parts.append(f'可优化：{optimize}')
+    content_html = "<br>".join(content_parts)
+
     return (
         f'<details style="margin-top:8px;">'
         f'<summary style="font-size:12px;font-weight:600;color:#a8001a;cursor:pointer;">✨ AI 解读</summary>'
         f'<div style="background:#F8F7F5;border-radius:6px;padding:10px 12px;margin-top:4px;">'
         f'<div style="font-size:12px;color:#5a5048;line-height:1.7;">'
-        f'核心亮点/问题：{ai_result.get("core_issue", "—")}<br>'
-        f'可借鉴点：{ai_result.get("highlight", "—")}<br>'
-        f'改进方向：{ai_result.get("weakness", "—")}<br>'
-        f'可复用/可优化：{ai_result.get("action", "—")}'
+        f'{content_html}'
         f'</div></div></details>'
     )
 
