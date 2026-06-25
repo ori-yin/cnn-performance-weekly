@@ -9,6 +9,7 @@ import streamlit as st
 from datetime import date, timedelta
 
 from config import MCD_RED, MCD_GOLD, API_PROVIDERS, CHANNELS
+from tabs.tab_plan import PLAN_CHANNELS
 from data import read_data, filter_week_data
 from scoring import compute_scores
 from styles import get_css
@@ -211,7 +212,7 @@ def main():
             )
 
         if st.button("✨ AI 分析", use_container_width=True):
-            # 按渠道分批，每批最多6条
+            # 按渠道×维度分批，每个渠道3个维度×4条
             df_ai = df.copy()
             if "消息内容" in df_ai.columns:
                 from tabs.tab_plan import _parse_message_content
@@ -222,7 +223,14 @@ def main():
             ai_results = st.session_state.get("ai_results", {})
             ch_count = 0
 
-            for ch in CHANNELS:
+            # 3个排序维度
+            DIMS = [
+                ("score", "综合评分"),
+                ("ctr", "CTR"),
+                ("sales", "订单Sales"),
+            ]
+
+            for ch in PLAN_CHANNELS:
                 ch_df = df_ai[df_ai["渠道"] == ch]
                 if len(ch_df) < 2:
                     continue
@@ -247,31 +255,36 @@ def main():
                 plan_agg = plan_agg[plan_agg["触达成功"] > 0]
                 if len(plan_agg) < 2:
                     continue
-                plan_agg = plan_agg.sort_values("综合评分", ascending=False).head(4)
 
-                items = []
-                keys = []
-                for rank, (_, row) in enumerate(plan_agg.iterrows(), 1):
-                    msg_col = "消息内容_parsed" if "消息内容_parsed" in row.index else "消息内容"
-                    content = str(row.get(msg_col, "")).strip() if msg_col in row.index else ""
-                    items.append({
-                        "标题": str(row.get("消息标题", "")),
-                        "内容": content[:200],
-                        "渠道": ch,
-                        "触达成功": int(row["触达成功"]),
-                        "点击人次": int(row["点击人次"]),
-                        "CTR": float(row["CTR"]),
-                        "订单GC": int(row["订单GC"]),
-                        "订单GC转化率": float(row["GC转化率"]),
-                        "综合评分": float(row["综合评分"]),
-                        "排名": rank,
-                    })
-                    keys.append(f"{row['Plan ID']}_{ch}")
+                for dim_id, sort_col in DIMS:
+                    if sort_col in plan_agg.columns:
+                        dim_top = plan_agg.sort_values(sort_col, ascending=False).head(4)
+                    else:
+                        dim_top = plan_agg.sort_values("综合评分", ascending=False).head(4)
 
-                with st.spinner(f"AI 正在分析 {ch}（{len(items)} 条）..."):
-                    results = analyze_content(ai_api_key, ai_provider, ai_model, items)
-                ai_results.update(dict(zip(keys, results)))
-                ch_count += 1
+                    items = []
+                    keys = []
+                    for rank, (_, row) in enumerate(dim_top.iterrows(), 1):
+                        msg_col = "消息内容_parsed" if "消息内容_parsed" in row.index else "消息内容"
+                        content = str(row.get(msg_col, "")).strip() if msg_col in row.index else ""
+                        items.append({
+                            "标题": str(row.get("消息标题", "")),
+                            "内容": content[:200],
+                            "渠道": ch,
+                            "触达成功": int(row["触达成功"]),
+                            "点击人次": int(row["点击人次"]),
+                            "CTR": float(row["CTR"]),
+                            "订单GC": int(row["订单GC"]),
+                            "订单GC转化率": float(row["GC转化率"]),
+                            "综合评分": float(row["综合评分"]),
+                            "排名": rank,
+                        })
+                        keys.append(f"{row['Plan ID']}_{ch}_{dim_id}")
+
+                    with st.spinner(f"AI 正在分析 {ch} - {dim_id}（{len(items)} 条）..."):
+                        results = analyze_content(ai_api_key, ai_provider, ai_model, items)
+                    ai_results.update(dict(zip(keys, results)))
+                    ch_count += 1
 
             if ch_count > 0:
                 st.session_state["ai_results"] = ai_results
