@@ -130,9 +130,9 @@ def render(df: pd.DataFrame, target: int):
     daily_normal = daily_normal.reindex(all_dates, fill_value=0)
     daily_total = daily_aarr.values + daily_normal.values
 
-    # 百分比文本
-    aarr_pct = [f"{a / t * 100:.0f}%" if t > 0 else "" for a, t in zip(daily_aarr.values, daily_total)]
-    normal_pct = [f"{n / t * 100:.0f}%" if t > 0 else "" for n, t in zip(daily_normal.values, daily_total)]
+    # 数值文本（带千分位）
+    aarr_text = [f"{a:,.0f}" if a > 0 else "" for a in daily_aarr.values]
+    normal_text = [f"{n:,.0f}" if n > 0 else "" for n in daily_normal.values]
 
     fig = go.Figure()
 
@@ -143,7 +143,7 @@ def render(df: pd.DataFrame, target: int):
         name="AARR",
         marker_color=MCD_RED,
         opacity=0.85,
-        text=aarr_pct,
+        text=aarr_text,
         textposition="inside",
         textfont=dict(size=10, color="#fff"),
     ))
@@ -155,7 +155,7 @@ def render(df: pd.DataFrame, target: int):
         name="常规",
         marker_color=MCD_GOLD,
         opacity=0.85,
-        text=normal_pct,
+        text=normal_text,
         textposition="inside",
         textfont=dict(size=10, color="#5a1a00"),
     ))
@@ -222,17 +222,14 @@ def render(df: pd.DataFrame, target: int):
     for ch in CHANNELS:
         subset = daily_ch[daily_ch["渠道"] == ch].copy()
         if len(subset) > 0:
-            subset["pct"] = subset.apply(
-                lambda r: f"{r['DAU'] / daily_total[r['日期']] * 100:.0f}%" if daily_total.get(r["日期"], 0) > 0 else "",
-                axis=1,
-            )
+            subset["val_text"] = subset["DAU"].apply(lambda x: f"{x:,.0f}" if x > 0 else "")
             fig_ch_stack.add_trace(go.Bar(
                 x=subset["日期"],
                 y=subset["DAU"],
                 name=ch,
                 marker_color=ch_colors.get(ch, "#999"),
                 opacity=0.85,
-                text=subset["pct"],
+                text=subset["val_text"],
                 textposition="inside",
                 textfont=dict(size=10, color=ch_text_color.get(ch, "#fff")),
             ))
