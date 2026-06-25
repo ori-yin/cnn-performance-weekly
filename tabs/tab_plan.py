@@ -164,33 +164,33 @@ def _aggregate_plans(ch_df: pd.DataFrame) -> pd.DataFrame:
     return plan_agg
 
 
-def _render_plan_cards(top6: pd.DataFrame, ch: str, ai_results: dict = None):
-    """Streamlit 渲染 TOP6 卡片（两列）"""
+def _render_plan_cards(top_n: pd.DataFrame, ch: str, ai_results: dict = None):
+    """Streamlit 渲染 TOP4 卡片（两列）"""
     col_l, col_r = st.columns(2)
-    rows_list = list(top6.iterrows())
+    rows_list = list(top_n.iterrows())
     with col_l:
-        for i, (_, row) in enumerate(rows_list[:3], 1):
+        for i, (_, row) in enumerate(rows_list[:2], 1):
             ai_key = f"{row['Plan ID']}_{ch}"
             ai = ai_results.get(ai_key) if ai_results else None
             st.markdown(_plan_card_html(row, i, is_good=True, ai_result=ai), unsafe_allow_html=True)
     with col_r:
-        for i, (_, row) in enumerate(rows_list[3:6], 4):
+        for i, (_, row) in enumerate(rows_list[2:4], 3):
             ai_key = f"{row['Plan ID']}_{ch}"
             ai = ai_results.get(ai_key) if ai_results else None
             st.markdown(_plan_card_html(row, i, is_good=True, ai_result=ai), unsafe_allow_html=True)
 
 
-def _export_plan_cards(top6: pd.DataFrame, ch: str, ai_results: dict = None) -> str:
-    """导出 HTML：TOP6 卡片（两列）"""
-    rows_list = list(top6.iterrows())
+def _export_plan_cards(top_n: pd.DataFrame, ch: str, ai_results: dict = None) -> str:
+    """导出 HTML：TOP4 卡片（两列）"""
+    rows_list = list(top_n.iterrows())
     html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">'
     html += '<div>'
-    for i, (_, row) in enumerate(rows_list[:3], 1):
+    for i, (_, row) in enumerate(rows_list[:2], 1):
         ai_key = f"{row['Plan ID']}_{ch}"
         ai = ai_results.get(ai_key) if ai_results else None
         html += _plan_card_html(row, i, is_good=True, ai_result=ai)
     html += '</div><div>'
-    for i, (_, row) in enumerate(rows_list[3:6], 4):
+    for i, (_, row) in enumerate(rows_list[2:4], 3):
         ai_key = f"{row['Plan ID']}_{ch}"
         ai = ai_results.get(ai_key) if ai_results else None
         html += _plan_card_html(row, i, is_good=True, ai_result=ai)
@@ -215,9 +215,9 @@ def _export_channel_tabs(ch: str, plan_agg: pd.DataFrame, ai_results: dict = Non
             f'<label for="dim-{prefix}-{dim_id}" class="plan-tab-label">{label}</label>'
         )
         if sort_col in plan_agg.columns:
-            sorted_df = plan_agg.sort_values(sort_col, ascending=False).head(6).reset_index(drop=True)
+            sorted_df = plan_agg.sort_values(sort_col, ascending=False).head(4).reset_index(drop=True)
         else:
-            sorted_df = plan_agg.sort_values("综合评分", ascending=False).head(6).reset_index(drop=True)
+            sorted_df = plan_agg.sort_values("综合评分", ascending=False).head(4).reset_index(drop=True)
         panels_html += f'<div class="plan-dim-panel">{_export_plan_cards(sorted_df, ch, ai_results)}</div>'
     return f'<div class="plan-dim-tabs">{tabs_html}{panels_html}</div>'
 
@@ -276,10 +276,10 @@ def render(df: pd.DataFrame, ai_results: dict = None):
         else:
             plan_agg = plan_agg.sort_values("综合评分", ascending=False)
 
-    top6 = plan_agg.head(6).reset_index(drop=True)
+    top4 = plan_agg.head(4).reset_index(drop=True)
 
     # ─── Streamlit 显示 ──────────────────────────────────
-    _render_plan_cards(top6, selected_ch, ai_results)
+    _render_plan_cards(top4, selected_ch, ai_results)
 
     # ─── 导出 HTML（渠道 tab + 维度 tab，扁平结构）──────────
     plan_html = ""
