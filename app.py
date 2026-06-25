@@ -256,11 +256,15 @@ def main():
                 if len(plan_agg) < 2:
                     continue
 
+                # 过滤掉被删除的Plan
+                deleted = st.session_state.get("deleted_plans", set())
+                plan_agg = plan_agg[~plan_agg["Plan ID"].isin(deleted)]
+
                 for dim_id, sort_col in DIMS:
                     if sort_col in plan_agg.columns:
-                        dim_top = plan_agg.sort_values(sort_col, ascending=False).head(20)
+                        dim_top = plan_agg.sort_values(sort_col, ascending=False).head(4)
                     else:
-                        dim_top = plan_agg.sort_values("综合评分", ascending=False).head(20)
+                        dim_top = plan_agg.sort_values("综合评分", ascending=False).head(4)
 
                     items = []
                     keys = []
