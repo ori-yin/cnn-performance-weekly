@@ -174,18 +174,43 @@ def _aggregate_plans(ch_df: pd.DataFrame) -> pd.DataFrame:
 
 
 def _render_plan_cards(top_n: pd.DataFrame, ch: str, dim_id: str = "score", ai_results: dict = None):
-    """Streamlit 渲染 TOP4 卡片（两列）"""
+    """Streamlit 渲染 TOP4 卡片（两列），支持删除"""
+    # 初始化删除列表
+    if "deleted_plans" not in st.session_state:
+        st.session_state["deleted_plans"] = set()
+
+    # 过滤掉被删除的Plan，重新排序
+    deleted = st.session_state["deleted_plans"]
+    filtered = top_n[~top_n["Plan ID"].isin(deleted)].reset_index(drop=True)
+
+    if len(filtered) == 0:
+        st.info("当前渠道没有可显示的 Plan")
+        return
+
+    # 重新排序后取前4
+    filtered = filtered.head(4).reset_index(drop=True)
+
     col_l, col_r = st.columns(2)
-    rows_list = list(top_n.iterrows())
+    rows_list = list(filtered.iterrows())
     with col_l:
         for i, (_, row) in enumerate(rows_list[:2], 1):
             ai_key = f"{row['Plan ID']}_{ch}_{dim_id}"
             ai = ai_results.get(ai_key) if ai_results else None
+            plan_id = row['Plan ID']
+            # 删除按钮
+            if st.button("×", key=f"del_{plan_id}_{ch}_{dim_id}", help="移除此Plan"):
+                st.session_state["deleted_plans"].add(plan_id)
+                st.rerun()
             st.markdown(_plan_card_html(row, i, is_good=True, ai_result=ai), unsafe_allow_html=True)
     with col_r:
         for i, (_, row) in enumerate(rows_list[2:4], 3):
             ai_key = f"{row['Plan ID']}_{ch}_{dim_id}"
             ai = ai_results.get(ai_key) if ai_results else None
+            plan_id = row['Plan ID']
+            # 删除按钮
+            if st.button("×", key=f"del_{plan_id}_{ch}_{dim_id}", help="移除此Plan"):
+                st.session_state["deleted_plans"].add(plan_id)
+                st.rerun()
             st.markdown(_plan_card_html(row, i, is_good=True, ai_result=ai), unsafe_allow_html=True)
 
 
@@ -264,12 +289,17 @@ def render(df: pd.DataFrame, ai_results: dict = None):
         st.info("当前筛选条件下没有足够的 Plan 数据进行分析")
         return ""
 
-    # ─── 渠道 + 维度选择器（左右横排）─────────────────────
-    col_ch, col_dim = st.columns(2)
+    # ─── 渠道 + 维度选择器（左右横排）+ 重置按钮 ─────────────
+    col_ch, col_dim, col_reset = st.columns([2, 2, 1])
     with col_ch:
         selected_ch = st.radio("渠道", options=available_channels, index=0, horizontal=True, key="plan_ch")
     with col_dim:
         sort_dim = st.radio("排序", options=["综合评分", "CTR", "Sales"], index=0, horizontal=True, key="plan_dim")
+    with col_reset:
+        st.markdown("<div style='height:24px'></div>", unsafe_allow_html=True)  # 对齐
+        if st.button("🔄 重置", help="恢复所有被移除的Plan"):
+            st.session_state["deleted_plans"] = set()
+            st.rerun()
 
     # 按选中维度排序
     ch_df = df[df["渠道"] == selected_ch].copy()
@@ -289,10 +319,11 @@ def render(df: pd.DataFrame, ai_results: dict = None):
         else:
             plan_agg = plan_agg.sort_values("综合评分", ascending=False)
 
-    top4 = plan_agg.head(4).reset_index(drop=True)
+    # 多取一些，因为删除后需要补充
+    top_n = plan_agg.head(8).reset_index(drop=True)
 
     # ─── Streamlit 显示 ──────────────────────────────────
-    _render_plan_cards(top4, selected_ch, dim_id, ai_results)
+    _render_plan_cards(top_n, selected_ch, dim_id, ai_results)
 
     # ─── 导出 HTML（渠道 tab + 维度 tab，扁平结构）──────────
     plan_html = ""
