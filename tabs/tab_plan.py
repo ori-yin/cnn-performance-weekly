@@ -256,10 +256,11 @@ def _export_channel_tabs(ch: str, plan_agg: pd.DataFrame, ai_results: dict = Non
             f'<input type="radio" name="dim-{prefix}" id="dim-{prefix}-{dim_id}" {checked} class="plan-dim-input">'
             f'<label for="dim-{prefix}-{dim_id}" class="plan-tab-label">{label}</label>'
         )
+        # 多取一些，确保过滤后还有足够的Plan显示
         if sort_col in plan_agg.columns:
-            sorted_df = plan_agg.sort_values(sort_col, ascending=False).head(4).reset_index(drop=True)
+            sorted_df = plan_agg.sort_values(sort_col, ascending=False).head(20).reset_index(drop=True)
         else:
-            sorted_df = plan_agg.sort_values("综合评分", ascending=False).head(4).reset_index(drop=True)
+            sorted_df = plan_agg.sort_values("综合评分", ascending=False).head(20).reset_index(drop=True)
         panels_html += f'<div class="plan-dim-panel">{_export_plan_cards(sorted_df, ch, dim_id, ai_results)}</div>'
     return f'<div class="plan-dim-tabs">{tabs_html}{panels_html}</div>'
 
