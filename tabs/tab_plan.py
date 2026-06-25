@@ -187,36 +187,49 @@ def _render_plan_cards(top_n: pd.DataFrame, ch: str, dim_id: str = "score", ai_r
         st.info("当前渠道没有可显示的 Plan")
         return
 
-    # 重新排序后取前4
-    filtered = filtered.head(4).reset_index(drop=True)
+    # 取前4个显示
+    display = filtered.head(4).reset_index(drop=True)
 
     col_l, col_r = st.columns(2)
-    rows_list = list(filtered.iterrows())
+    rows_list = list(display.iterrows())
     with col_l:
         for i, (_, row) in enumerate(rows_list[:2], 1):
             ai_key = f"{row['Plan ID']}_{ch}_{dim_id}"
             ai = ai_results.get(ai_key) if ai_results else None
             plan_id = row['Plan ID']
-            # 删除按钮
-            if st.button("×", key=f"del_{plan_id}_{ch}_{dim_id}", help="移除此Plan"):
-                st.session_state["deleted_plans"].add(plan_id)
-                st.rerun()
-            st.markdown(_plan_card_html(row, i, is_good=True, ai_result=ai), unsafe_allow_html=True)
+            # 删除按钮（小圆形，卡片右上角）
+            col_card, col_del = st.columns([6, 1])
+            with col_card:
+                st.markdown(_plan_card_html(row, i, is_good=True, ai_result=ai), unsafe_allow_html=True)
+            with col_del:
+                st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+                if st.button("✕", key=f"del_{plan_id}_{ch}_{dim_id}", help="移除此Plan"):
+                    st.session_state["deleted_plans"].add(plan_id)
+                    st.rerun()
     with col_r:
         for i, (_, row) in enumerate(rows_list[2:4], 3):
             ai_key = f"{row['Plan ID']}_{ch}_{dim_id}"
             ai = ai_results.get(ai_key) if ai_results else None
             plan_id = row['Plan ID']
-            # 删除按钮
-            if st.button("×", key=f"del_{plan_id}_{ch}_{dim_id}", help="移除此Plan"):
-                st.session_state["deleted_plans"].add(plan_id)
-                st.rerun()
-            st.markdown(_plan_card_html(row, i, is_good=True, ai_result=ai), unsafe_allow_html=True)
+            # 删除按钮（小圆形，卡片右上角）
+            col_card, col_del = st.columns([6, 1])
+            with col_card:
+                st.markdown(_plan_card_html(row, i, is_good=True, ai_result=ai), unsafe_allow_html=True)
+            with col_del:
+                st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+                if st.button("✕", key=f"del_{plan_id}_{ch}_{dim_id}", help="移除此Plan"):
+                    st.session_state["deleted_plans"].add(plan_id)
+                    st.rerun()
 
 
 def _export_plan_cards(top_n: pd.DataFrame, ch: str, dim_id: str = "score", ai_results: dict = None) -> str:
-    """导出 HTML：TOP4 卡片（两列）"""
-    rows_list = list(top_n.iterrows())
+    """导出 HTML：TOP4 卡片（两列），过滤掉被删除的Plan"""
+    # 过滤掉被删除的Plan
+    deleted = st.session_state.get("deleted_plans", set())
+    filtered = top_n[~top_n["Plan ID"].isin(deleted)].reset_index(drop=True)
+    display = filtered.head(4).reset_index(drop=True)
+
+    rows_list = list(display.iterrows())
     html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">'
     html += '<div>'
     for i, (_, row) in enumerate(rows_list[:2], 1):
@@ -319,8 +332,8 @@ def render(df: pd.DataFrame, ai_results: dict = None):
         else:
             plan_agg = plan_agg.sort_values("综合评分", ascending=False)
 
-    # 多取一些，因为删除后需要补充
-    top_n = plan_agg.head(8).reset_index(drop=True)
+    # 多取一些，确保删除后还有足够的Plan可以显示
+    top_n = plan_agg.head(20).reset_index(drop=True)
 
     # ─── Streamlit 显示 ──────────────────────────────────
     _render_plan_cards(top_n, selected_ch, dim_id, ai_results)
