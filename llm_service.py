@@ -6,6 +6,7 @@ llm_service.py - CNN Performance Weekly：LLM 内容分析服务
 import json
 import re
 import openai
+import dirtyjson
 from config import API_PROVIDERS
 
 
@@ -77,23 +78,17 @@ def call_llm(api_key: str, provider: str, model: str, prompt: str) -> list:
     # 清理 markdown 代码块
     raw = re.sub(r"^```(?:json)?\s*", "", raw)
     raw = re.sub(r"\s*```$", "", raw)
-    # 清理多余逗号（trailing comma）
-    raw = re.sub(r",\s*([}\]])", r"\1", raw)
     # 尝试提取 JSON 数组
     match = re.search(r"\[.*\]", raw, re.DOTALL)
     if match:
         raw = match.group(0)
-    # 清理字符串内的非法换行符（JSON 不允许裸换行）
-    raw = re.sub(r'(?<!\\)\n', ' ', raw)
-    # 修复未转义的引号（简单场景：值里的双引号）
-    # 先尝试直接解析
+    # 使用 dirtyjson 解析（容忍未转义引号、trailing comma、单引号等）
     try:
+        result = dirtyjson.loads(raw)
+        return result
+    except Exception:
+        # 兜底：尝试标准 json 解析
         return json.loads(raw)
-    except json.JSONDecodeError:
-        # 如果失败，逐行尝试修复
-        lines = raw.split('\n')
-        cleaned = ' '.join(line.strip() for line in lines)
-        return json.loads(cleaned)
 
 
 def analyze_content(api_key: str, provider: str, model: str, items: list) -> list:
