@@ -102,7 +102,7 @@ def _extract_json_robust(raw: str) -> list:
             item[key] = value
         # 也尝试提取空字符串的情况
         pairs_empty = re.findall(r'"(\w+)"\s*:\s*""', item_str)
-        for key, _ in pairs_empty:
+        for key in pairs_empty:
             if key not in item:
                 item[key] = ""
         if item:

@@ -100,7 +100,7 @@ def _plan_card_html(row: pd.Series, rank: int, is_good: bool, ai_result: dict = 
         )
 
     return (
-        f'<div style="background:#fff;border:1px solid #e4d9bf;border-radius:10px;padding:14px 16px;margin-bottom:10px;">'
+        f'<div style="background:#fff;border:1px solid #e4d9bf;border-radius:10px;padding:14px 16px;margin-bottom:10px;position:relative;">'
         f'<div style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:6px;">'
         f'<span>{medal}</span>'
         f'<span style="color:#5a5048;">{plan_id}</span>'
@@ -190,36 +190,31 @@ def _render_plan_cards(top_n: pd.DataFrame, ch: str, dim_id: str = "score", ai_r
     # 取前4个显示
     display = filtered.head(4).reset_index(drop=True)
 
+    # 两列布局
     col_l, col_r = st.columns(2)
     rows_list = list(display.iterrows())
+
     with col_l:
         for i, (_, row) in enumerate(rows_list[:2], 1):
             ai_key = f"{row['Plan ID']}_{ch}_{dim_id}"
             ai = ai_results.get(ai_key) if ai_results else None
             plan_id = row['Plan ID']
-            # 删除按钮（小圆形，卡片右上角）
-            col_card, col_del = st.columns([6, 1])
-            with col_card:
-                st.markdown(_plan_card_html(row, i, is_good=True, ai_result=ai), unsafe_allow_html=True)
-            with col_del:
-                st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
-                if st.button("✕", key=f"del_{plan_id}_{ch}_{dim_id}", help="移除此Plan"):
-                    st.session_state["deleted_plans"].add(plan_id)
-                    st.rerun()
+            # 卡片 + 删除按钮（右下角）
+            st.markdown(_plan_card_html(row, i, is_good=True, ai_result=ai), unsafe_allow_html=True)
+            if st.button("移除", key=f"del_{plan_id}_{ch}_{dim_id}", help="移除此Plan"):
+                st.session_state["deleted_plans"].add(plan_id)
+                st.rerun()
+
     with col_r:
         for i, (_, row) in enumerate(rows_list[2:4], 3):
             ai_key = f"{row['Plan ID']}_{ch}_{dim_id}"
             ai = ai_results.get(ai_key) if ai_results else None
             plan_id = row['Plan ID']
-            # 删除按钮（小圆形，卡片右上角）
-            col_card, col_del = st.columns([6, 1])
-            with col_card:
-                st.markdown(_plan_card_html(row, i, is_good=True, ai_result=ai), unsafe_allow_html=True)
-            with col_del:
-                st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
-                if st.button("✕", key=f"del_{plan_id}_{ch}_{dim_id}", help="移除此Plan"):
-                    st.session_state["deleted_plans"].add(plan_id)
-                    st.rerun()
+            # 卡片 + 删除按钮（右下角）
+            st.markdown(_plan_card_html(row, i, is_good=True, ai_result=ai), unsafe_allow_html=True)
+            if st.button("移除", key=f"del_{plan_id}_{ch}_{dim_id}", help="移除此Plan"):
+                st.session_state["deleted_plans"].add(plan_id)
+                st.rerun()
 
 
 def _export_plan_cards(top_n: pd.DataFrame, ch: str, dim_id: str = "score", ai_results: dict = None) -> str:
