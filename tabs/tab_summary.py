@@ -23,30 +23,24 @@ def render(df: pd.DataFrame, target: int, dau_df: pd.DataFrame = None):
     total_gc = df["订单GC"].sum()
     total_sales = df["订单Sales"].sum() if "订单Sales" in df.columns else 0
 
-    # 按天聚合（Plan 级数据，用于触达/GC/Sales）
-    daily_plan = df.groupby(df["发送日期"].dt.date).agg(
+    # 按天聚合（一次 groupby，覆盖两种情况）
+    daily_all = df.groupby(df["发送日期"].dt.date).agg(
+        DAU_fallback=("点击人次", "sum"),
         触达=("触达成功", "sum"),
         GC=("订单GC", "sum"),
     ).reset_index()
-    daily_plan.columns = ["日期", "触达", "GC"]
+    daily_all.columns = ["日期", "DAU", "触达", "GC"]
 
     # DAU 数据：优先用第二个 sheet 的去重 DAU
     use_dau_sheet = dau_df is not None and not dau_df.empty and "DAU" in dau_df.columns
     if use_dau_sheet:
-        daily = dau_df[["日期", "DAU"]].copy()
-        daily["日期"] = daily["日期"].dt.date
-        # 合并触达/GC
-        daily = daily.merge(daily_plan, on="日期", how="left").fillna(0)
+        dau_clean = dau_df[["日期", "DAU"]].copy()
+        dau_clean["日期"] = dau_clean["日期"].dt.date
+        daily = dau_clean.merge(daily_all[["日期", "触达", "GC"]], on="日期", how="left").fillna(0)
         daily["触达"] = daily["触达"].astype(int)
         daily["GC"] = daily["GC"].astype(int)
     else:
-        # 兜底：用点击人次作为 DAU（不去重）
-        daily = df.groupby(df["发送日期"].dt.date).agg(
-            DAU=("点击人次", "sum"),
-            触达=("触达成功", "sum"),
-            GC=("订单GC", "sum"),
-        ).reset_index()
-        daily.columns = ["日期", "DAU", "触达", "GC"]
+        daily = daily_all
 
     days_count = len(daily)
 
@@ -123,7 +117,7 @@ def render(df: pd.DataFrame, target: int, dau_df: pd.DataFrame = None):
         xaxis=dict(title="", gridcolor="#E8E8E8", tickformat="%m/%d\n%a"),
         yaxis=dict(title="DAU", gridcolor="#E8E8E8", tickformat=","),
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, font=dict(size=11)),
-        font=dict(family="'PingFang SC', 'Microsoft YaHei', sans-serif"),
+        font=dict(family="'Microsoft YaHei', 'PingFang SC', -apple-system, sans-serif"),
     )
 
     st.plotly_chart(fig, use_container_width=True)
@@ -141,7 +135,7 @@ def render(df: pd.DataFrame, target: int, dau_df: pd.DataFrame = None):
         "total_reach": total_reach,
         "total_sales": total_sales,
         "status": status_actual,
-        "use_dau_sheet": use_dau_sheet,
+        "dau_label": dau_label,
     }
     figs = [fig_json]
     return figs, kpis

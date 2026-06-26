@@ -194,7 +194,7 @@ def get_css() -> str:
 
   /* ─── 锚点跳转偏移（补偿固定 header 高度）─── */
   [id^="sec-"] {{
-    scroll-margin-top: 110px;
+    scroll-margin-top: 115px;
   }}
 
   /* ─── 分隔线 ─── */
@@ -218,6 +218,7 @@ def get_css() -> str:
     left: 0;
     right: 0;
     z-index: 100;
+    height: 57px;
   }}
   .topbar-left {{
     display: flex;
@@ -261,7 +262,7 @@ def get_css() -> str:
   /* ─── 导航栏（锚点链接，参考 ITO）────────────────────────────── */
   .nav-bar {{
     position: fixed;
-    top: 57px;
+    top: 60px;
     left: 0;
     right: 0;
     z-index: 90;

@@ -69,7 +69,7 @@ def _get_css() -> str:
   /* ─── 导航栏 ─── */
   .nav-bar {
     position: sticky;
-    top: 57px;
+    top: 60px;
     z-index: 90;
     background: rgba(255,253,248,.96);
     backdrop-filter: blur(6px);
@@ -203,7 +203,7 @@ def _get_css() -> str:
 
   /* ─── 锚点跳转偏移（补偿固定 header 高度）─── */
   [id^="sec-"] {
-    scroll-margin-top: 110px;
+    scroll-margin-top: 115px;
   }
 
   /* ─── 分隔线 ─── */
@@ -446,7 +446,7 @@ def generate_html(df, target: int, figs: dict, tables: dict, kpis: dict, period_
     comp_str = summary_kpis.get("completion_str", "—")
     comp_sub = f"完成 {comp_str}（共 {days_count} 天）" if days_count > 0 else ""
 
-    dau_label = "DAU Actual（日均·去重）" if summary_kpis.get("use_dau_sheet") else "DAU Actual（日均）"
+    dau_label = summary_kpis.get("dau_label", "DAU Actual（日均）")
     cards = [
         _render_kpi_card("DAU Target（日均）", target, sub=comp_sub),
         _render_kpi_card(dau_label, summary_kpis.get("avg_dau", 0), sub=ach_sub, status=summary_kpis.get("status", "")),

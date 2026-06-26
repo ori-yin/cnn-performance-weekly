@@ -201,7 +201,7 @@ def render(df: pd.DataFrame, target: int):
             x=1,
             font=dict(size=11),
         ),
-        font=dict(family="'PingFang SC', 'Microsoft YaHei', sans-serif"),
+        font=dict(family="'Microsoft YaHei', 'PingFang SC', -apple-system, sans-serif"),
     )
 
     st.plotly_chart(fig, use_container_width=True)
@@ -280,7 +280,7 @@ def render(df: pd.DataFrame, target: int):
         xaxis=dict(title="", gridcolor="#E8E8E8", tickformat="%m/%d\n%a"),
         yaxis=dict(title="DAU（点击人次）", gridcolor="#E8E8E8", tickformat=","),
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, font=dict(size=11)),
-        font=dict(family="'PingFang SC', 'Microsoft YaHei', sans-serif"),
+        font=dict(family="'Microsoft YaHei', 'PingFang SC', -apple-system, sans-serif"),
     )
     st.plotly_chart(fig_ch_stack, use_container_width=True)
 

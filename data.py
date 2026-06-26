@@ -95,19 +95,14 @@ def _derive_metrics(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def read_data(uploaded_file) -> pd.DataFrame:
+def read_data(uploaded_file, file_bytes: bytes = None) -> pd.DataFrame:
     """
     读取上传的 CSV 或 XLSX 文件，返回标准化的 DataFrame。
-
-    流程：
-    1. 根据文件后缀选择读取方式
-    2. 多编码尝试（CSV）
-    3. Fuzzy column mapping
-    4. 数值列转换
-    5. 日期解析
-    6. 衍生指标计算
+    file_bytes 可选：传入已读取的字节，避免重复读取流。
     """
     filename = uploaded_file.name.lower()
+    if file_bytes is not None:
+        uploaded_file = BytesIO(file_bytes)
 
     if filename.endswith(".xlsx") or filename.endswith(".xls"):
         df = _read_xlsx(uploaded_file)
@@ -143,11 +138,15 @@ def read_data(uploaded_file) -> pd.DataFrame:
     return df
 
 
-def _read_xlsx(uploaded_file) -> pd.DataFrame:
-    """读取 XLSX 文件，用 openpyxl 保证 emoji 完整"""
+def _open_xlsx_sheets(file_bytes: bytes):
+    """一次性打开 XLSX workbook，调用方负责 wb.close()。"""
     import openpyxl
+    return openpyxl.load_workbook(BytesIO(file_bytes), read_only=True, data_only=True)
 
-    wb = openpyxl.load_workbook(BytesIO(uploaded_file.read()), read_only=True, data_only=True)
+
+def _read_xlsx(uploaded_file) -> pd.DataFrame:
+    """读取 XLSX 文件第一个 sheet"""
+    wb = _open_xlsx_sheets(uploaded_file.read())
     ws = wb.active
     rows = list(ws.iter_rows(values_only=True))
     wb.close()
@@ -164,14 +163,13 @@ def _read_xlsx(uploaded_file) -> pd.DataFrame:
     return df
 
 
-def read_dau_sheet(uploaded_file) -> pd.DataFrame:
+def read_dau_sheet(file_bytes: bytes) -> pd.DataFrame:
     """
     读取 XLSX 的第二个 sheet（按天去重 DAU）。
-    期望两列：第一列日期、第二列 DAU。
+    期望两列：第一列日期，第二列 DAU。
+    接受 bytes（由调用方从 uploaded.read() 获得），避免重复读取流。
     """
-    import openpyxl
-
-    wb = openpyxl.load_workbook(BytesIO(uploaded_file.read()), read_only=True, data_only=True)
+    wb = _open_xlsx_sheets(file_bytes)
     if len(wb.sheetnames) < 2:
         wb.close()
         return pd.DataFrame()

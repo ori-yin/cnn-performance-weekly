@@ -85,7 +85,7 @@ def render_fixed_header_js():
         parent.document.body.insertBefore(navBar, topbar.nextSibling);
 
         var main = parent.document.querySelector('[data-testid="stAppViewContent"]');
-        if (main) main.style.paddingTop = '100px';
+        if (main) main.style.paddingTop = '110px';
 
         // 侧边栏固定宽度 280px
         topbar.style.left = '280px';
@@ -135,11 +135,9 @@ def main():
 
     # ─── 数据读取 ─────────────────────────────────────────
     if uploaded is not None:
-        file_bytes = uploaded.read()  # 先读取字节，避免指针到末尾
-        uploaded.seek(0)
-        raw_df = read_data(uploaded)
-        uploaded.seek(0)
-        dau_df = read_dau_sheet(uploaded)  # 第二个 sheet：按天去重 DAU
+        file_bytes = uploaded.read()  # 一次性读取，两个函数共用
+        raw_df = read_data(uploaded, file_bytes=file_bytes)
+        dau_df = read_dau_sheet(file_bytes)  # 第二个 sheet：按天去重 DAU
     else:
         st.info("请在左侧上传 Excel 或 CSV 数据文件")
         return
@@ -167,6 +165,19 @@ def main():
         start_date = st.date_input("开始日期", value=default_start, min_value=data_min, max_value=data_max)
         end_date = st.date_input("结束日期", value=default_end, min_value=data_min, max_value=data_max)
 
+        # 导出按钮（HTML 内容由 session_state 提供，首次可能为空）
+        st.markdown("---")
+        export_html = st.session_state.get("export_html", "")
+        today_str = date.today().strftime("%Y%m%d")
+        st.download_button(
+            label="下载 HTML 看板",
+            data=export_html or "<html><body>请先刷新页面</body></html>",
+            file_name=f"performance_review_{today_str}.html",
+            mime="text/html",
+            use_container_width=True,
+            disabled=not export_html,
+        )
+
     # 更新顶部栏 badge 显示所选日期范围
     update_topbar_badge(f"{start_date} ~ {end_date}")
 
@@ -178,18 +189,16 @@ def main():
     # 计算综合评分
     df = compute_scores(df)
 
-    # ─── 维度筛选（需数据加载后才有选项）─────────────────────
+    # ─── 维度筛选（折叠）─────────────────────────────────
     with st.sidebar:
-        st.markdown("---")
-        st.markdown("##### 维度筛选")
+        with st.expander("维度筛选", expanded=False):
+            channels = sorted(df["渠道"].dropna().unique().tolist()) if "渠道" in df.columns else []
+            plan_types = sorted(df["计划类型"].dropna().unique().tolist()) if "计划类型" in df.columns else []
+            bus = sorted(df["预算owner"].dropna().unique().tolist()) if "预算owner" in df.columns else []
 
-        channels = sorted(df["渠道"].dropna().unique().tolist()) if "渠道" in df.columns else []
-        plan_types = sorted(df["计划类型"].dropna().unique().tolist()) if "计划类型" in df.columns else []
-        bus = sorted(df["预算owner"].dropna().unique().tolist()) if "预算owner" in df.columns else []
-
-        selected_channels = st.multiselect("渠道", channels, default=channels)
-        selected_plan_types = st.multiselect("计划类型", plan_types, default=plan_types)
-        selected_bus = st.multiselect("预算 Owner (BU)", bus, default=bus)
+            selected_channels = st.multiselect("渠道", channels, default=channels)
+            selected_plan_types = st.multiselect("计划类型", plan_types, default=plan_types)
+            selected_bus = st.multiselect("预算 Owner (BU)", bus, default=bus)
 
     if selected_channels:
         df = df[df["渠道"].isin(selected_channels)]
@@ -344,35 +353,12 @@ def main():
     channel_summary = st.session_state.get("channel_summary", {})
     plan_html = render_plan(df, ai_results=ai_results, channel_summary=channel_summary)
 
-    # ─── 导出 HTML 按钮 ──────────────────────────────────────
-    with st.sidebar:
-        st.markdown("---")
-        st.markdown("##### 导出分享")
-
-        figs = {
-            "summary": summary_figs,
-            "operational": op_figs,
-            "bu": bu_figs,
-        }
-        kpis = {
-            "summary": summary_kpis,
-            "operational": op_kpis,
-        }
-        tables = {
-            "operational": op_detail_html,
-            "bu": bu_table_html,
-            "plan": plan_html,
-        }
-
-        html_content = generate_html(df, target_dau, figs, tables, kpis, period_str=f"{start_date} ~ {end_date}", channel_summary=channel_summary)
-        today_str = date.today().strftime("%Y%m%d")
-        st.download_button(
-            label="下载 HTML 看板",
-            data=html_content,
-            file_name=f"performance_review_{today_str}.html",
-            mime="text/html",
-            use_container_width=True,
-        )
+    # ─── 导出 HTML ──────────────────────────────────────
+    figs = {"summary": summary_figs, "operational": op_figs, "bu": bu_figs}
+    kpis = {"summary": summary_kpis, "operational": op_kpis}
+    tables = {"operational": op_detail_html, "bu": bu_table_html, "plan": plan_html}
+    html_content = generate_html(df, target_dau, figs, tables, kpis, period_str=f"{start_date} ~ {end_date}", channel_summary=channel_summary)
+    st.session_state["export_html"] = html_content
 
 
 if __name__ == "__main__":
