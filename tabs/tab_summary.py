@@ -10,8 +10,10 @@ from config import MCD_RED, MCD_GOLD, MCD_GREEN, THEME_BG
 from components import kpi_card, kpi_row, section_header
 
 
-def render(df: pd.DataFrame, target: int):
-    """渲染 Executive Summary 层，返回 (figs, kpis) 供导出用"""
+def render(df: pd.DataFrame, target: int, dau_df: pd.DataFrame = None):
+    """渲染 Executive Summary 层，返回 (figs, kpis) 供导出用。
+    如果 dau_df 提供了去重 DAU 数据，则用它来显示 DAU Actual 和趋势图。
+    """
 
     st.markdown(section_header("Executive Summary", ""), unsafe_allow_html=True)
 
@@ -21,13 +23,30 @@ def render(df: pd.DataFrame, target: int):
     total_gc = df["订单GC"].sum()
     total_sales = df["订单Sales"].sum() if "订单Sales" in df.columns else 0
 
-    # 按天聚合
-    daily = df.groupby(df["发送日期"].dt.date).agg(
-        DAU=("点击人次", "sum"),
+    # 按天聚合（Plan 级数据，用于触达/GC/Sales）
+    daily_plan = df.groupby(df["发送日期"].dt.date).agg(
         触达=("触达成功", "sum"),
         GC=("订单GC", "sum"),
     ).reset_index()
-    daily.columns = ["日期", "DAU", "触达", "GC"]
+    daily_plan.columns = ["日期", "触达", "GC"]
+
+    # DAU 数据：优先用第二个 sheet 的去重 DAU
+    use_dau_sheet = dau_df is not None and not dau_df.empty and "DAU" in dau_df.columns
+    if use_dau_sheet:
+        daily = dau_df[["日期", "DAU"]].copy()
+        daily["日期"] = daily["日期"].dt.date
+        # 合并触达/GC
+        daily = daily.merge(daily_plan, on="日期", how="left").fillna(0)
+        daily["触达"] = daily["触达"].astype(int)
+        daily["GC"] = daily["GC"].astype(int)
+    else:
+        # 兜底：用点击人次作为 DAU（不去重）
+        daily = df.groupby(df["发送日期"].dt.date).agg(
+            DAU=("点击人次", "sum"),
+            触达=("触达成功", "sum"),
+            GC=("订单GC", "sum"),
+        ).reset_index()
+        daily.columns = ["日期", "DAU", "触达", "GC"]
 
     days_count = len(daily)
 
@@ -50,10 +69,11 @@ def render(df: pd.DataFrame, target: int):
     # 达成率 → Actual 副文本；完成天数 → Target 副文本
     ach_sub = f"{achievement_rate:.1f}% 达成" if target > 0 else ""
     comp_sub = f"完成 {completion_str}（共 {days_count} 天）" if target > 0 else ""
+    dau_label = "DAU Actual（日均·去重）" if use_dau_sheet else "DAU Actual（日均）"
 
     cards = [
         kpi_card("DAU Target（日均）", target, sub=comp_sub),
-        kpi_card("DAU Actual（日均）", round(avg_dau), sub=ach_sub, status=status_actual),
+        kpi_card(dau_label, round(avg_dau), sub=ach_sub, status=status_actual),
         kpi_card("触达成功（日均）", avg_reach),
         kpi_card("订单Sales（日均）", avg_sales),
     ]
@@ -61,7 +81,8 @@ def render(df: pd.DataFrame, target: int):
     st.markdown(kpi_row(cards), unsafe_allow_html=True)
 
     # ─── 每日 DAU 趋势图 ──────────────────────────────────
-    st.markdown('<div class="section-subheader">每日 DAU 趋势</div>', unsafe_allow_html=True)
+    dau_chart_label = "每日 DAU 趋势（去重）" if use_dau_sheet else "每日 DAU 趋势"
+    st.markdown(f'<div class="section-subheader">{dau_chart_label}</div>', unsafe_allow_html=True)
 
     fig = go.Figure()
 
@@ -120,6 +141,7 @@ def render(df: pd.DataFrame, target: int):
         "total_reach": total_reach,
         "total_sales": total_sales,
         "status": status_actual,
+        "use_dau_sheet": use_dau_sheet,
     }
     figs = [fig_json]
     return figs, kpis

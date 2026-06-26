@@ -128,7 +128,7 @@ def _ai_inline_html(ai_result: dict = None) -> str:
     if "error" in ai_result:
         return (
             f'<details style="margin-top:8px;">'
-            f'<summary style="font-size:12px;font-weight:600;color:#c00;cursor:pointer;">⚠ AI 解读失败</summary>'
+            f'<summary style="font-size:12px;font-weight:600;color:#c00;cursor:pointer;">AI 解读失败</summary>'
             f'<div style="background:#F8F7F5;border-radius:6px;padding:10px 12px;margin-top:4px;">'
             f'<div style="font-size:12px;color:#c00;">{ai_result["error"]}</div>'
             f'</div></details>'
@@ -144,7 +144,7 @@ def _ai_inline_html(ai_result: dict = None) -> str:
 
     return (
         f'<details style="margin-top:8px;">'
-        f'<summary style="font-size:12px;font-weight:600;color:#a8001a;cursor:pointer;">✨ AI 解读</summary>'
+        f'<summary style="font-size:12px;font-weight:600;color:#a8001a;cursor:pointer;">AI 解读</summary>'
         f'<div style="background:#F8F7F5;border-radius:6px;padding:10px 12px;margin-top:4px;">'
         f'<div style="font-size:12px;color:#5a5048;line-height:1.7;">'
         f'{content_html}'
@@ -252,18 +252,18 @@ def _export_channel_tabs(ch: str, plan_agg: pd.DataFrame, ai_results: dict = Non
         content_framework = ch_summary.get("content_framework", "")
         if why_good or content_framework:
             summary_html = '<div style="background:#fffdf8;border:1px solid #e4d9bf;border-radius:10px;padding:16px;margin:12px 0;">'
-            summary_html += '<div style="font-size:13px;font-weight:700;color:#a8001a;margin-bottom:10px;">📊 渠道总结</div>'
+            summary_html += '<div style="font-size:13px;font-weight:700;color:#a8001a;margin-bottom:10px;">渠道总结</div>'
             if why_good:
                 summary_html += (
                     f'<div style="margin-bottom:10px;">'
-                    f'<div style="font-size:12px;font-weight:600;color:#5a5048;margin-bottom:4px;">✨ 为什么好</div>'
+                    f'<div style="font-size:12px;font-weight:600;color:#5a5048;margin-bottom:4px;">为什么好</div>'
                     f'<div style="font-size:12px;color:#2b2620;line-height:1.7;">{why_good}</div>'
                     f'</div>'
                 )
             if content_framework:
                 summary_html += (
                     f'<div>'
-                    f'<div style="font-size:12px;font-weight:600;color:#5a5048;margin-bottom:4px;">📐 内容框架</div>'
+                    f'<div style="font-size:12px;font-weight:600;color:#5a5048;margin-bottom:4px;">内容框架</div>'
                     f'<div style="font-size:13px;font-weight:700;color:#a8001a;">{content_framework}</div>'
                     f'</div>'
                 )
@@ -303,12 +303,12 @@ def _channel_summary_html(summary: dict) -> str:
         return ""
 
     html = '<div style="background:#fffdf8;border:1px solid #e4d9bf;border-radius:10px;padding:16px;margin:12px 0;">'
-    html += '<div style="font-size:13px;font-weight:700;color:#a8001a;margin-bottom:10px;">📊 渠道总结</div>'
+    html += '<div style="font-size:13px;font-weight:700;color:#a8001a;margin-bottom:10px;">渠道总结</div>'
 
     if why_good:
         html += (
             f'<div style="margin-bottom:10px;">'
-            f'<div style="font-size:12px;font-weight:600;color:#5a5048;margin-bottom:4px;">✨ 为什么好</div>'
+            f'<div style="font-size:12px;font-weight:600;color:#5a5048;margin-bottom:4px;">为什么好</div>'
             f'<div style="font-size:12px;color:#2b2620;line-height:1.7;">{why_good}</div>'
             f'</div>'
         )
@@ -316,7 +316,7 @@ def _channel_summary_html(summary: dict) -> str:
     if content_framework:
         html += (
             f'<div>'
-            f'<div style="font-size:12px;font-weight:600;color:#5a5048;margin-bottom:4px;">📐 内容框架</div>'
+            f'<div style="font-size:12px;font-weight:600;color:#5a5048;margin-bottom:4px;">内容框架</div>'
             f'<div style="font-size:13px;font-weight:700;color:#a8001a;">{content_framework}</div>'
             f'</div>'
         )

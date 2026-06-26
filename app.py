@@ -10,7 +10,7 @@ from datetime import date, timedelta
 
 from config import MCD_RED, MCD_GOLD, API_PROVIDERS, CHANNELS
 from tabs.tab_plan import PLAN_CHANNELS
-from data import read_data, filter_week_data
+from data import read_data, filter_week_data, read_dau_sheet
 from scoring import compute_scores
 from styles import get_css
 from tabs.tab_summary import render as render_summary
@@ -135,7 +135,11 @@ def main():
 
     # ─── 数据读取 ─────────────────────────────────────────
     if uploaded is not None:
+        file_bytes = uploaded.read()  # 先读取字节，避免指针到末尾
+        uploaded.seek(0)
         raw_df = read_data(uploaded)
+        uploaded.seek(0)
+        dau_df = read_dau_sheet(uploaded)  # 第二个 sheet：按天去重 DAU
     else:
         st.info("请在左侧上传 Excel 或 CSV 数据文件")
         return
@@ -319,8 +323,12 @@ def main():
                 st.warning("没有可分析的 Plan 数据")
 
     # ─── 主体内容（单页滚动，4个 section）─────────────────────
+    # 筛选 DAU sheet 的日期范围
+    if not dau_df.empty and "日期" in dau_df.columns:
+        dau_df = dau_df[(dau_df["日期"].dt.date >= start_date) & (dau_df["日期"].dt.date <= end_date)]
+
     st.markdown('<div id="sec-summary"></div>', unsafe_allow_html=True)
-    summary_figs, summary_kpis = render_summary(df, target_dau)
+    summary_figs, summary_kpis = render_summary(df, target_dau, dau_df=dau_df)
 
     st.markdown('<hr class="divider">', unsafe_allow_html=True)
     st.markdown('<div id="sec-operational"></div>', unsafe_allow_html=True)

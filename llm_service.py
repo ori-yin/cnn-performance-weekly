@@ -175,7 +175,7 @@ def build_channel_summary_prompt(channel: str, items: list) -> str:
 
 {chr(10).join(lines)}
 
-请从以下两个维度进行总结：
+请从以下两个维度进行总结（不要使用emoji，用纯文字表述）：
 
 1. **为什么好**（30-50字）：
 - 抽象这4条内容的共同成功因素

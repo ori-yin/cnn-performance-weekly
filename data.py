@@ -164,6 +164,41 @@ def _read_xlsx(uploaded_file) -> pd.DataFrame:
     return df
 
 
+def read_dau_sheet(uploaded_file) -> pd.DataFrame:
+    """
+    读取 XLSX 的第二个 sheet（按天去重 DAU）。
+    期望两列：第一列日期、第二列 DAU。
+    """
+    import openpyxl
+
+    wb = openpyxl.load_workbook(BytesIO(uploaded_file.read()), read_only=True, data_only=True)
+    if len(wb.sheetnames) < 2:
+        wb.close()
+        return pd.DataFrame()
+
+    ws = wb[wb.sheetnames[1]]
+    rows = list(ws.iter_rows(values_only=True))
+    wb.close()
+
+    if len(rows) < 2:
+        return pd.DataFrame()
+
+    # 不依赖列名，直接按位置：第一列=日期，第二列=DAU
+    data_rows = rows[1:]  # 跳过表头
+    dates = [r[0] for r in data_rows]
+    daus = [r[1] for r in data_rows]
+
+    df = pd.DataFrame({
+        "日期": pd.to_datetime(dates, errors="coerce"),
+        "DAU": pd.to_numeric(daus, errors="coerce"),
+    })
+
+    # 去掉空行
+    df = df.dropna(subset=["日期", "DAU"])
+
+    return df
+
+
 def _read_csv(uploaded_file) -> pd.DataFrame:
     """读取 CSV 文件，多编码尝试"""
     bytes_data = uploaded_file.read()

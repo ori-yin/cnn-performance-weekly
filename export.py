@@ -446,9 +446,10 @@ def generate_html(df, target: int, figs: dict, tables: dict, kpis: dict, period_
     comp_str = summary_kpis.get("completion_str", "—")
     comp_sub = f"完成 {comp_str}（共 {days_count} 天）" if days_count > 0 else ""
 
+    dau_label = "DAU Actual（日均·去重）" if summary_kpis.get("use_dau_sheet") else "DAU Actual（日均）"
     cards = [
         _render_kpi_card("DAU Target（日均）", target, sub=comp_sub),
-        _render_kpi_card("DAU Actual（日均）", summary_kpis.get("avg_dau", 0), sub=ach_sub, status=summary_kpis.get("status", "")),
+        _render_kpi_card(dau_label, summary_kpis.get("avg_dau", 0), sub=ach_sub, status=summary_kpis.get("status", "")),
         _render_kpi_card("触达成功（日均）", summary_kpis.get("avg_reach", 0)),
         _render_kpi_card("订单Sales（日均）", summary_kpis.get("avg_sales", 0)),
     ]
