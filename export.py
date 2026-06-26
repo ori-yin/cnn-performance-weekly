@@ -330,8 +330,8 @@ def _get_css() -> str:
 
 
 def _get_logo_base64() -> str:
-    """获取 logo 的 base64 编码"""
-    logo_path = Path(__file__).parent / "mcdonalds.png"
+    """获取 logo 的 base64 编码（SVG 格式）"""
+    logo_path = Path(__file__).parent / "mcdonalds.svg"
     return base64.b64encode(logo_path.read_bytes()).decode()
 
 
@@ -341,7 +341,7 @@ def _render_topbar(period_str: str) -> str:
     return f"""
 <div class="topbar">
   <div class="topbar-left">
-    <img src="data:image/png;base64,{logo_b64}" class="topbar-logo" alt="McDonald's">
+    <img src="data:image/svg+xml;base64,{logo_b64}" class="topbar-logo" alt="McDonald's">
     <div class="topbar-title">
       <h1>Performance Review</h1>
       <div class="sub">周度数据复盘看板</div>
@@ -395,7 +395,7 @@ def _render_kpi_row(cards_html: list) -> str:
 
 
 def _fig_to_html(fig_json: str) -> str:
-    """将 Plotly 图表 JSON 转为 HTML 片段"""
+    """将 Plotly 图表 JSON 转为 HTML 片段（不含 Plotly JS，由 head 统一引入）"""
     # 从 JSON 重建图表
     fig = go.Figure(json.loads(fig_json))
 
@@ -403,8 +403,8 @@ def _fig_to_html(fig_json: str) -> str:
     if fig.layout.height is None:
         fig.update_layout(height=300)
 
-    # 生成 HTML（包含 plotlyjs 以独立运行）
-    return fig.to_html(include_plotlyjs='cdn', full_html=False)
+    # 生成 HTML（不含 plotlyjs，由 head 统一引入 CDN）
+    return fig.to_html(include_plotlyjs=False, full_html=False)
 
 
 def _render_section(num: int, title: str, content: str) -> str:
@@ -492,6 +492,7 @@ def generate_html(df, target: int, figs: dict, tables: dict, kpis: dict, period_
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Performance Review - {today_str}</title>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
 {_get_css()}
 </head>
 <body>

@@ -23,13 +23,13 @@ from llm_service import analyze_content, analyze_channel_summary
 
 def render_topbar():
     """渲染顶部栏"""
-    logo_path = Path(__file__).parent / "mcdonalds.png"
+    logo_path = Path(__file__).parent / "mcdonalds.svg"
     logo_b64 = base64.b64encode(logo_path.read_bytes()).decode()
 
     st.markdown(f"""
     <div class="topbar">
       <div class="topbar-left">
-        <img src="data:image/png;base64,{logo_b64}" class="topbar-logo-img" alt="McDonald's">
+        <img src="data:image/svg+xml;base64,{logo_b64}" class="topbar-logo-img" alt="McDonald's">
         <div class="topbar-title">
           <h1>Performance Review</h1>
           <div class="sub">周度数据复盘看板</div>
