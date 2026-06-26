@@ -5,6 +5,7 @@ tab_bu.py - 第三层：BU 分析
 
 import streamlit as st
 import pandas as pd
+from config import MCD_DARK_RED, THEME_INK, THEME_INK2, THEME_MUTED, THEME_PAPER, THEME_LINE, THEME_ROW_ALT, THEME_RADIUS_M
 from components import section_header
 
 
@@ -96,18 +97,18 @@ def render(df: pd.DataFrame):
         rows = ""
         for i, (_, row) in enumerate(sorted_df.head(5).iterrows()):
             bg = medal_bg[i] if i < 3 else "#fff"
-            icon = medal_icon[i] if i < 3 else f'<span style="color:#999;font-size:11px;">{i+1}.</span>'
+            icon = medal_icon[i] if i < 3 else f'<span style="color:{THEME_MUTED};font-size:11px;">{i+1}.</span>'
             val = _fmt_val(row[metric_col], unit)
             rows += (
                 f'<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:{bg};border-radius:6px;margin-bottom:3px;">'
                 f'<span style="width:22px;text-align:center;flex-shrink:0;">{icon}</span>'
-                f'<span style="flex:1;font-size:12px;font-weight:600;color:#2b2620;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{row["BU"]}</span>'
-                f'<span style="font-size:12px;color:#5a5048;font-variant-numeric:tabular-nums;flex-shrink:0;">{val}</span>'
+                f'<span style="flex:1;font-size:12px;font-weight:600;color:{THEME_INK};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{row["BU"]}</span>'
+                f'<span style="font-size:12px;color:{THEME_INK2};font-variant-numeric:tabular-nums;flex-shrink:0;">{val}</span>'
                 f'</div>'
             )
         return (
-            f'<div style="background:#fffdf8;border:1px solid #e4d9bf;border-radius:10px;padding:12px;">'
-            f'<div style="font-size:13px;font-weight:700;color:#a8001a;margin-bottom:8px;">{title}</div>'
+            f'<div style="background:{THEME_PAPER};border:1px solid {THEME_LINE};border-radius:{THEME_RADIUS_M};padding:12px;">'
+            f'<div style="font-size:13px;font-weight:700;color:{MCD_DARK_RED};margin-bottom:8px;">{title}</div>'
             f'{rows}</div>'
         )
 
@@ -139,9 +140,9 @@ def render(df: pd.DataFrame):
     # ─── BU 总览表（构建一次，显示+导出共用）─────────────────
     st.markdown('<div class="section-subheader">BU 总览</div>', unsafe_allow_html=True)
 
-    TH = "background:#a8001a;color:#fff;padding:9px 11px;font-weight:700;font-size:11.5px;"
-    TD = "padding:8px 11px;border-bottom:1px solid #f0e8d6;"
-    TD_EVEN = "padding:8px 11px;border-bottom:1px solid #f0e8d6;background:#fcfaf3;"
+    TH = f"background:{MCD_DARK_RED};color:#fff;padding:10px 12px;font-weight:700;font-size:12px;"
+    TD = f"padding:8px 12px;border-bottom:1px solid {THEME_LINE};"
+    TD_EVEN = f"padding:8px 12px;border-bottom:1px solid {THEME_LINE};background:{THEME_ROW_ALT};"
 
     rows_html = ""
     for i, (_, row) in enumerate(bu_df.iterrows()):
@@ -162,7 +163,7 @@ def render(df: pd.DataFrame):
         )
 
     bu_table_html = (
-        f'<table style="width:100%;border-collapse:collapse;font-size:13px;background:#fffdf8;border-radius:9px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);">'
+        f'<table style="width:100%;border-collapse:collapse;font-size:13px;background:{THEME_PAPER};border-radius:9px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);">'
         f'<thead><tr>'
         f'<th style="{TH}text-align:left;">BU</th>'
         f'<th style="{TH}text-align:right;">Plan数</th>'

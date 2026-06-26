@@ -3,7 +3,7 @@ components.py - CNN Performance Weekly：可复用 UI 组件
 参考 mcd-reach-trend 的 KPI Card 组件
 """
 
-from config import MCD_RED, MCD_GOLD, MCD_GREEN, THEME_PAPER, THEME_LINE, THEME_INK, THEME_INK2
+from config import MCD_RED, MCD_GOLD, MCD_GREEN, THEME_PAPER, THEME_LINE, THEME_INK, THEME_INK2, THEME_MUTED, THEME_TAG_BG, THEME_RADIUS_S
 
 
 def _fmt_number(val, unit=""):
@@ -137,7 +137,7 @@ def progress_bar(actual: float, target: float, width: str = "100%") -> str:
         color = MCD_RED
 
     return (
-        f'<div style="width:{width};height:8px;background:#EDEDED;border-radius:4px;overflow:hidden;">'
+        f'<div style="width:{width};height:8px;background:{THEME_LINE};border-radius:4px;overflow:hidden;">'
         f'<div style="width:{pct:.0f}%;height:100%;background:{color};border-radius:4px;transition:width 0.3s;"></div>'
         f'</div>'
     )

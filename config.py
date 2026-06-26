@@ -17,6 +17,17 @@ THEME_INK2 = "#5a5048"      # 副文字
 THEME_LINE = "#e4d9bf"      # 边框线
 THEME_ROW_ALT = "#fcfaf3"   # 交替行背景
 
+# 设计系统 tokens
+THEME_HOVER = "#fde9ea"     # hover 态背景
+THEME_MUTED = "#8a7e72"     # 弱化文字（比 INK2 更淡）
+THEME_TAG_BG = "#F8F7F5"    # 药丸/标签背景
+THEME_TAG_BORDER = "#e8e0d4" # 标签边框
+THEME_SHADOW_1 = "0 1px 3px rgba(120,90,30,.06)"   # 卡片
+THEME_SHADOW_2 = "0 2px 8px rgba(120,90,30,.10)"   # 悬浮/弹出
+THEME_RADIUS_S = "6px"      # 小圆角（标签、按钮）
+THEME_RADIUS_M = "10px"     # 中圆角（卡片）
+THEME_RADIUS_L = "14px"     # 大圆角（容器）
+
 
 # ─── 状态阈值 ──────────────────────────────────────────────────
 # 绿 = 达成 / 黄 = 落后 5-15% / 红 = 落后 15%+

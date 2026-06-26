@@ -6,7 +6,7 @@ AARR / 常规 × 渠道，堆积柱状图 + 折叠展开
 import streamlit as st
 import plotly.graph_objects as go
 import pandas as pd
-from config import MCD_RED, MCD_GOLD, MCD_GREEN, THEME_BG, CHANNELS
+from config import MCD_RED, MCD_GOLD, MCD_GREEN, MCD_DARK_RED, THEME_BG, THEME_INK, THEME_PAPER, THEME_LINE, THEME_ROW_ALT, THEME_RADIUS_S, CHANNELS
 from components import section_header, kpi_card, kpi_row
 
 
@@ -46,9 +46,9 @@ def _channel_detail_table(df_sub: pd.DataFrame, plan_type_label: str, days_count
         st.info(f"没有 {plan_type_label} 的渠道数据")
         return ""
 
-    TH = "background:#a8001a;color:#fff;padding:9px 11px;font-weight:700;font-size:11.5px;"
-    TD = "padding:8px 11px;border-bottom:1px solid #f0e8d6;"
-    TD_EVEN = "padding:8px 11px;border-bottom:1px solid #f0e8d6;background:#fcfaf3;"
+    TH = f"background:{MCD_DARK_RED};color:#fff;padding:10px 12px;font-weight:700;font-size:12px;"
+    TD = f"padding:8px 12px;border-bottom:1px solid {THEME_LINE};"
+    TD_EVEN = f"padding:8px 12px;border-bottom:1px solid {THEME_LINE};background:{THEME_ROW_ALT};"
 
     rows_html = ""
     for i, r in enumerate(rows):
@@ -67,8 +67,8 @@ def _channel_detail_table(df_sub: pd.DataFrame, plan_type_label: str, days_count
         )
 
     table_html = (
-        f'<div style="font-size:13px;font-weight:600;color:#2b2620;margin:12px 0 8px;">{plan_type_label}</div>'
-        f'<table style="width:100%;border-collapse:collapse;font-size:13px;background:#fffdf8;border-radius:9px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);">'
+        f'<div style="font-size:13px;font-weight:600;color:{THEME_INK};margin:12px 0 8px;">{plan_type_label}</div>'
+        f'<table style="width:100%;border-collapse:collapse;font-size:13px;background:{THEME_PAPER};border-radius:9px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);">'
         f'<thead><tr>'
         f'<th style="{TH}text-align:left;">渠道</th>'
         f'<th style="{TH}text-align:right;">Plan数</th>'

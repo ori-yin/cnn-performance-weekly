@@ -7,7 +7,7 @@ import json
 import re
 import streamlit as st
 import pandas as pd
-from config import MCD_RED, MCD_GOLD, MCD_GREEN, CHANNELS
+from config import MCD_RED, MCD_GOLD, MCD_GREEN, MCD_DARK_RED, CHANNELS, THEME_INK, THEME_INK2, THEME_MUTED, THEME_LINE, THEME_PAPER, THEME_TAG_BG, THEME_TAG_BORDER, THEME_RADIUS_S, THEME_RADIUS_M
 from components import section_header
 from llm_service import analyze_channel_summary
 
@@ -58,7 +58,7 @@ def _parse_message_content(raw):
 def _plan_card_html(row: pd.Series, rank: int, is_good: bool, ai_result: dict = None) -> str:
     """生成单个 Plan 卡片的 HTML，可选 AI 解读"""
     medal_map = {1: "🥇", 2: "🥈", 3: "🥉"}
-    medal = medal_map.get(rank, f'<span style="color:#999;font-size:11px;">{rank}.</span>')
+    medal = medal_map.get(rank, f'<span style="color:{THEME_MUTED};font-size:11px;">{rank}.</span>')
 
     score = row.get("综合评分", 0)
     score_color = MCD_GREEN if score >= 75 else (MCD_GOLD if score >= 60 else MCD_RED)
@@ -79,10 +79,10 @@ def _plan_card_html(row: pd.Series, rank: int, is_good: bool, ai_result: dict = 
     # 文案区域（无边框，直接展示）
     msg_html = ""
     if msg_title:
-        msg_html += f'<div style="font-weight:600;color:#2b2620;font-size:12px;margin-top:6px;">{msg_title}</div>'
+        msg_html += f'<div style="font-weight:600;color:{THEME_INK};font-size:12px;margin-top:6px;">{msg_title}</div>'
     if msg_text:
         display_text = msg_text[:100] + "..." if len(msg_text) > 100 else msg_text
-        msg_html += f'<div style="color:#888;font-size:12px;line-height:1.5;margin-top:2px;">{display_text}</div>'
+        msg_html += f'<div style="color:{THEME_MUTED};font-size:12px;line-height:1.5;margin-top:2px;">{display_text}</div>'
 
     # 数据豆腐块（药丸样式，参考 mcd-content-rank）
     metrics = [
@@ -96,22 +96,22 @@ def _plan_card_html(row: pd.Series, rank: int, is_good: bool, ai_result: dict = 
     metrics_html = ""
     for label, val in metrics:
         metrics_html += (
-            f'<span style="background:#F8F7F5;padding:3px 10px;border-radius:6px;font-size:12px;color:#888;font-weight:500;">'
+            f'<span style="background:{THEME_TAG_BG};padding:3px 10px;border-radius:{THEME_RADIUS_S};font-size:12px;color:{THEME_MUTED};font-weight:500;">'
             f'{label} {val}</span>'
         )
 
     return (
-        f'<div style="background:#fff;border:1px solid #e4d9bf;border-radius:10px;padding:14px 16px;margin-bottom:10px;position:relative;">'
+        f'<div style="background:#fff;border:1px solid {THEME_LINE};border-radius:{THEME_RADIUS_M};padding:14px 16px;margin-bottom:10px;position:relative;">'
         f'<div style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:6px;">'
         f'<span>{medal}</span>'
-        f'<span style="color:#5a5048;">{plan_id}</span>'
-        f'<span style="color:#ccc;">·</span>'
-        f'<span style="color:#5a5048;">{bu}</span>'
-        f'<span style="color:#ccc;">·</span>'
-        f'<span style="color:#999;">{send_date}</span>'
+        f'<span style="color:{THEME_INK2};">{plan_id}</span>'
+        f'<span style="color:{THEME_TAG_BORDER};">·</span>'
+        f'<span style="color:{THEME_INK2};">{bu}</span>'
+        f'<span style="color:{THEME_TAG_BORDER};">·</span>'
+        f'<span style="color:{THEME_MUTED};">{send_date}</span>'
         f'<span style="margin-left:auto;font-size:16px;font-weight:800;color:{score_color};">{score:.0f}</span>'
         f'</div>'
-        f'<div style="font-size:13px;font-weight:700;color:#2b2620;margin-bottom:4px;">{plan_name}</div>'
+        f'<div style="font-size:13px;font-weight:700;color:{THEME_INK};margin-bottom:4px;">{plan_name}</div>'
         f'{msg_html}'
         f'<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">'
         f'{metrics_html}'
@@ -129,7 +129,7 @@ def _ai_inline_html(ai_result: dict = None) -> str:
         return (
             f'<details style="margin-top:8px;">'
             f'<summary style="font-size:12px;font-weight:600;color:#c00;cursor:pointer;">AI 解读失败</summary>'
-            f'<div style="background:#F8F7F5;border-radius:6px;padding:10px 12px;margin-top:4px;">'
+            f'<div style="background:{THEME_TAG_BG};border-radius:{THEME_RADIUS_S};padding:10px 12px;margin-top:4px;">'
             f'<div style="font-size:12px;color:#c00;">{ai_result["error"]}</div>'
             f'</div></details>'
         )
@@ -144,9 +144,9 @@ def _ai_inline_html(ai_result: dict = None) -> str:
 
     return (
         f'<details style="margin-top:8px;">'
-        f'<summary style="font-size:12px;font-weight:600;color:#a8001a;cursor:pointer;">AI 解读</summary>'
-        f'<div style="background:#F8F7F5;border-radius:6px;padding:10px 12px;margin-top:4px;">'
-        f'<div style="font-size:12px;color:#5a5048;line-height:1.7;">'
+        f'<summary style="font-size:12px;font-weight:600;color:{MCD_DARK_RED};cursor:pointer;">AI 解读</summary>'
+        f'<div style="background:{THEME_TAG_BG};border-radius:{THEME_RADIUS_S};padding:10px 12px;margin-top:4px;">'
+        f'<div style="font-size:12px;color:{THEME_INK2};line-height:1.7;">'
         f'{content_html}'
         f'</div></div></details>'
     )
@@ -200,7 +200,6 @@ def _render_plan_cards(top_n: pd.DataFrame, ch: str, dim_id: str = "score", ai_r
             ai_key = f"{row['Plan ID']}_{ch}_{dim_id}"
             ai = ai_results.get(ai_key) if ai_results else None
             plan_id = row['Plan ID']
-            # 卡片 + 删除按钮（右下角）
             st.markdown(_plan_card_html(row, i, is_good=True, ai_result=ai), unsafe_allow_html=True)
             if st.button("移除", key=f"del_{plan_id}_{ch}_{dim_id}", help="移除此Plan"):
                 st.session_state["deleted_plans"].add(plan_id)
@@ -211,7 +210,6 @@ def _render_plan_cards(top_n: pd.DataFrame, ch: str, dim_id: str = "score", ai_r
             ai_key = f"{row['Plan ID']}_{ch}_{dim_id}"
             ai = ai_results.get(ai_key) if ai_results else None
             plan_id = row['Plan ID']
-            # 卡片 + 删除按钮（右下角）
             st.markdown(_plan_card_html(row, i, is_good=True, ai_result=ai), unsafe_allow_html=True)
             if st.button("移除", key=f"del_{plan_id}_{ch}_{dim_id}", help="移除此Plan"):
                 st.session_state["deleted_plans"].add(plan_id)
@@ -251,20 +249,20 @@ def _export_channel_tabs(ch: str, plan_agg: pd.DataFrame, ai_results: dict = Non
         why_good = ch_summary.get("why_good", "")
         content_framework = ch_summary.get("content_framework", "")
         if why_good or content_framework:
-            summary_html = '<div style="background:#fffdf8;border:1px solid #e4d9bf;border-radius:10px;padding:16px;margin:12px 0;">'
-            summary_html += '<div style="font-size:13px;font-weight:700;color:#a8001a;margin-bottom:10px;">渠道总结</div>'
+            summary_html = f'<div style="background:{THEME_PAPER};border:1px solid {THEME_LINE};border-radius:{THEME_RADIUS_M};padding:16px;margin:12px 0;">'
+            summary_html += f'<div style="font-size:13px;font-weight:700;color:{MCD_DARK_RED};margin-bottom:10px;">渠道总结</div>'
             if why_good:
                 summary_html += (
                     f'<div style="margin-bottom:10px;">'
-                    f'<div style="font-size:12px;font-weight:600;color:#5a5048;margin-bottom:4px;">为什么好</div>'
-                    f'<div style="font-size:12px;color:#2b2620;line-height:1.7;">{why_good}</div>'
+                    f'<div style="font-size:12px;font-weight:600;color:{THEME_INK2};margin-bottom:4px;">为什么好</div>'
+                    f'<div style="font-size:12px;color:{THEME_INK};line-height:1.7;">{why_good}</div>'
                     f'</div>'
                 )
             if content_framework:
                 summary_html += (
                     f'<div>'
-                    f'<div style="font-size:12px;font-weight:600;color:#5a5048;margin-bottom:4px;">内容框架</div>'
-                    f'<div style="font-size:13px;font-weight:700;color:#a8001a;">{content_framework}</div>'
+                    f'<div style="font-size:12px;font-weight:600;color:{THEME_INK2};margin-bottom:4px;">内容框架</div>'
+                    f'<div style="font-size:13px;font-weight:700;color:{MCD_DARK_RED};">{content_framework}</div>'
                     f'</div>'
                 )
             summary_html += '</div>'
@@ -302,22 +300,22 @@ def _channel_summary_html(summary: dict) -> str:
     if not why_good and not content_framework:
         return ""
 
-    html = '<div style="background:#fffdf8;border:1px solid #e4d9bf;border-radius:10px;padding:16px;margin:12px 0;">'
-    html += '<div style="font-size:13px;font-weight:700;color:#a8001a;margin-bottom:10px;">渠道总结</div>'
+    html = f'<div style="background:{THEME_PAPER};border:1px solid {THEME_LINE};border-radius:{THEME_RADIUS_M};padding:16px;margin:12px 0;">'
+    html += f'<div style="font-size:13px;font-weight:700;color:{MCD_DARK_RED};margin-bottom:10px;">渠道总结</div>'
 
     if why_good:
         html += (
             f'<div style="margin-bottom:10px;">'
-            f'<div style="font-size:12px;font-weight:600;color:#5a5048;margin-bottom:4px;">为什么好</div>'
-            f'<div style="font-size:12px;color:#2b2620;line-height:1.7;">{why_good}</div>'
+            f'<div style="font-size:12px;font-weight:600;color:{THEME_INK2};margin-bottom:4px;">为什么好</div>'
+            f'<div style="font-size:12px;color:{THEME_INK};line-height:1.7;">{why_good}</div>'
             f'</div>'
         )
 
     if content_framework:
         html += (
             f'<div>'
-            f'<div style="font-size:12px;font-weight:600;color:#5a5048;margin-bottom:4px;">内容框架</div>'
-            f'<div style="font-size:13px;font-weight:700;color:#a8001a;">{content_framework}</div>'
+            f'<div style="font-size:12px;font-weight:600;color:{THEME_INK2};margin-bottom:4px;">内容框架</div>'
+            f'<div style="font-size:13px;font-weight:700;color:{MCD_DARK_RED};">{content_framework}</div>'
             f'</div>'
         )
 
@@ -366,7 +364,7 @@ def render(df: pd.DataFrame, ai_results: dict = None, channel_summary: dict = No
         sort_dim = st.radio("排序", options=["综合评分", "CTR", "Sales"], index=0, horizontal=True, key="plan_dim")
     with col_reset:
         st.markdown("<div style='height:24px'></div>", unsafe_allow_html=True)  # 对齐
-        if st.button("🔄 重置", help="恢复所有被移除的Plan"):
+        if st.button("重置", help="恢复所有被移除的Plan"):
             st.session_state["deleted_plans"] = set()
             st.rerun()
 
